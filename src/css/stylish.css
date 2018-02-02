@@ -97,3 +97,21 @@ button {
 .vex-content h1 {
   font-size: 32px;
 }
+
+/* Mapbox GL Stuff */
+
+.marker {
+  background-image: url('../img/marker.png');
+  background-size: contain;
+  width: 30px;
+  height: 77px;
+  cursor: pointer;
+}
+
+.mapboxgl-popup {
+  max-width: 200px;
+}
+
+.mapboxgl-popup-content {
+  font-family: 'Open Sans', sans-serif;
+}

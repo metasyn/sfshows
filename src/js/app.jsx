@@ -1,25 +1,36 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
 
-import Parser from './components/parser';
-import Util from './components/util';
-import ShowMap from './components/map';
+import Parser from './components/Parser';
+import Dates from './components/dates/Dates';
+import ShowMap from './components/Map';
 
 import '../css/stylish.css';
 
 class Application extends Component {
-  static plot() {
+  static prepare() {
     const parsed = new Parser().parseData();
 
+    // keys: organized, dates
     parsed.then((data) => {
-      Util.populateDates(data.dates);
+      // Pop modal?
+      // TODO
+
+      // Add the dates
+      const dateEl = document.getElementById('date-selector-container');
+      render(<Dates dates={data.dates} />, dateEl);
+
+      // Add the shows
+      const mapEl = document.getElementById('app');
+      render(<ShowMap geojson={data.geojson} />, mapEl);
+      console.log(data.geojson)
     });
   }
 
   render() {
-    Application.plot();
+    Application.prepare();
     return (
-      <ShowMap />
+      <div />
     );
   }
 }
