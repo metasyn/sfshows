@@ -1,5 +1,8 @@
 import $ from 'jquery';
 
+import Venues from '../../data/venues.json';
+import getEditDistance from './Util';
+
 export default class Parser {
   constructor() {
     this.yql = Parser.makeYQL();
@@ -11,7 +14,8 @@ export default class Parser {
         const results = Parser.parseHTMLtoDOM(success);
         const dates = Parser.getDates(results);
         const organized = Parser.sortByDate(results, dates);
-        return { organized, dates };
+        const geojson = Parser.geojsonify(organized);
+        return { organized, geojson, dates };
       })
       .catch(e => Error((e)));
   }
@@ -67,5 +71,65 @@ export default class Parser {
     }
 
     return organized;
+  }
+
+  static geojsonify(data) {
+    const features = [];
+    const dateKeys = Object.keys(data);
+
+    // loop through dates
+    for (let i = 0; i < dateKeys.length; i += 1) {
+      // loop through shows
+      for (let j = 0; j < data[dateKeys[i]].length; j += 1) {
+        const showData = data[dateKeys[i]][j];
+        const venueList = Object.keys(Venues);
+
+        // check for misspellings
+        if (!Venues[showData.venue]) {
+          try {
+            for (let v = 0; v < venueList.length; v += 1) {
+              const misspelled = showData.venue.replace(/\W/g, '');
+              const spelledCorrect = venueList[v].replace(/\W/g, '');
+              const editDistance = getEditDistance(misspelled, spelledCorrect);
+              if (editDistance <= 3) {
+                console.log(`"${showData.venue}" has been replaced with "${venueList[v]}"`);
+                showData.venue = venueList[v];
+              }
+            }
+          } catch (e) {
+            console.log('Missing Venue?', e);
+          }
+        }
+
+        const showString = `${dateKeys[i]} - ${showData.venue} | ${showData.bands.join(' |')} | ${showData.details}`;
+        const showHTML = `<h1> ${showData.venue} </h1><br/><h3> ${dateKeys[i]} </h3><br/><h2>${showData.bands.join(' |')}<br/> ${showData.details}`;
+
+        const show = {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [showData.venue] || [-122.422960, 37.826524],
+          },
+          properties: {
+            date: dateKeys[i],
+            venue: showData.venue,
+            bands: showData.bands,
+            details: showData.details.replace(/ ,/g, ''), // fucking commas
+            showString,
+            showHTML,
+          },
+        };
+
+        // add show to features array
+        features.push(show);
+      }
+    }
+
+    // format for valid geojson
+    const geojson = {
+      type: 'FeatureCollection',
+      features,
+    };
+    return geojson;
   }
 }
