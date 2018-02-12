@@ -101,16 +101,18 @@ export default class Parser {
           }
         }
 
-        const showString = `${dateKeys[i]} - ${showData.venue} | ${showData.bands.join(' |')} | ${showData.details}`;
-        const showHTML = `<h1> ${showData.venue} </h1><br/><h3> ${dateKeys[i]} </h3><br/><h2>${showData.bands.join(' |')}<br/> ${showData.details}`;
+        const showString = `${dateKeys[i]} - ${showData.venue} | ${showData.bands.join(' | ')} | ${showData.details}`;
+        const bandsString = showData.bands.map(x => (`- ${x} <br/>`)).join('');
+        const showHTML = `<h2> ${dateKeys[i]} </h2><br/><h3> ${bandsString}<br/> ${showData.details}</h3>`;
 
         const show = {
           type: 'Feature',
           geometry: {
             type: 'Point',
-            coordinates: [showData.venue] || [-122.422960, 37.826524],
+            coordinates: Venues[showData.venue] || [-122.422960, 37.826524],
           },
           properties: {
+            sid: `${i}-${j}`,
             date: dateKeys[i],
             venue: showData.venue,
             bands: showData.bands,

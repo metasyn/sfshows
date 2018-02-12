@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
 
+import $ from 'jquery';
+
 import Parser from './components/Parser';
 import Dates from './components/dates/Dates';
 import ShowMap from './components/Map';
@@ -23,7 +25,21 @@ class Application extends Component {
       // Add the shows
       const mapEl = document.getElementById('app');
       render(<ShowMap geojson={data.geojson} />, mapEl);
-      console.log(data.geojson)
+
+      // Add listeners
+      $('#filter-button').on('click', () => {
+        $('.filters').toggleClass('hidden');
+      });
+
+      $('#see-list-button').on('click', () => {
+        $('.map-overlay').css('height', '100%');
+        $('#see-list-button').toggleClass('hidden');
+      });
+
+      $('.closebtn').on('click', () => {
+        $('.map-overlay').css('height', 0);
+        $('#see-list-button').toggleClass('hidden');
+      });
     });
   }
 
