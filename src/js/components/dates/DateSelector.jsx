@@ -8,7 +8,6 @@ export default class DateSelector extends Component {
         <input
           type="checkbox"
           name="filters"
-          onClick={this.props.showShows}
           value={this.props.date}
           defaultChecked
         /> { this.props.date }
@@ -19,6 +18,5 @@ export default class DateSelector extends Component {
 
 DateSelector.propTypes = {
   date: PropTypes.string.isRequired,
-  showShows: PropTypes.func.isRequired,
 };
 

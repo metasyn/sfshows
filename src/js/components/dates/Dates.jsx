@@ -7,11 +7,7 @@ export default class Dates extends Component {
   constructor(props) {
     super(props);
     this.makeDateSelectors = this.makeDateSelectors.bind(this);
-    this.showShows = this.showShows.bind(this);
   }
-
-  // eslint-disable-next-line
-  showShows(){}
 
   makeDateSelectors(dates) {
     const selectors = [];

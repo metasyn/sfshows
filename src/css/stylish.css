@@ -4,114 +4,169 @@ body {
 }
 
 #map {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
+  position:absolute;
+  left:25%;
+  top:0;
+  bottom:0;
+  width: 75%;
 }
 
-#panel {
-  overflow: auto;
-  position: absolute;
-  bottom: 30px;
-  border-radius: 3px;
-  max-height: 250px;
-  overflow: auto;
-  width: 100%;
+.button-container {
+  margin: 10px auto;
+  width: 90%;
 }
 
-#panel-rel {
-  position: relative;
+.button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
 }
 
-pre.ui-coordinates {
-  background: rgba(0,0,0,0.5);
-  padding: 5px 10px 0px 5px;
-  position: relative;
-  color: #fff;
-  font-size: 14px;
-  line-height: 18px;
-  border-radius: 3px;
-  max-height: 100px;
-  overflow: auto;
-  width: 100%;
-  margin: 2px;
-}
-
-button {
-  background-color: #FFF;
-  font-size: 14px;
-  margin: 0px auto 10px auto 
+.hidden {
+  display: none !important;
 }
 
 #date-selector-container {
-  background: rgba(0,0,0,0.5);
-  position: relative;
-  color: #fff;
-  font-size: 14px;
-  line-height: 18px;
-  width: 100%;
-  padding: 5px 10px 10px 5px;
+  display: grid;
+  grid-template-rows: repeat(5, 25px);
+  grid-template-columns: 50% 50%;
+  grid-auto-flow: columns;
+  grid-auto-columns: 50% 50%;
+  margin-left: 50px;
 }
 
-
-#q{
-  font-size: 40px;
-  color: white;
-  z-index: 6;
-  position: fixed;
-  top: 5px;
-  right: 25px;
-}
-
-#modal-template{
-  display: none;
-}
-
-
-.noselect {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none;   /* Chrome/Safari/Opera */
-  -khtml-user-select: none;    /* Konqueror */
-  -moz-user-select: none;      /* Firefox */
-  -ms-user-select: none;       /* IE/Edge */
-  user-select: none;           /* non-prefixed version, currently
-                                  not supported by any browser */
-}
-
-.vex-overlay {
-  height: 150vh;
-}
-
-
-.vex-content p {
-  font-size: 14px;
-  line-height: 1.25em;
-}
-
-.vex-content pre {
-  font-size: 14px;
-  line-height: 1em;
-  }
-
-.vex-content h1 {
-  font-size: 32px;
-}
 
 /* Mapbox GL Stuff */
 
-.marker {
-  background-image: url('../img/marker.png');
-  background-size: contain;
-  width: 30px;
-  height: 77px;
-  cursor: pointer;
-}
-
 .mapboxgl-popup {
-  max-width: 200px;
+  max-width: 400px;
+  max-height: 400px;
 }
 
 .mapboxgl-popup-content {
   font-family: 'Open Sans', sans-serif;
+  overflow: scroll;
+}
+
+.mapboxgl-popup-content h1 {
+  font-size: 20px;
+}
+
+.mapboxgl-popup-content h2 {
+  font-size: 16px;
+}
+
+.mapboxgl-popup-content h2 {
+  font-size: 14px;
+}
+
+.map-overlay {
+  position: absolute;
+  width: 25%;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  background-color: #fff;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+#feature-listing p:nth-child(odd) {
+  background-color: #f2f2f2;
+}
+
+.map-overlay fieldset {
+  display: none;
+  background: #ddd;
+  border: none;
+  padding: 10px;
+  margin: 0;
+}
+
+.map-overlay .overlay-item {
+  display: block;
+  border: none;
+  width: 100%;
+  border-radius: 3px;
+  padding: 10px;
+  margin: 0;
+}
+
+.map-overlay .listing {
+  overflow: auto;
+  max-height: 100%;
+}
+
+.map-overlay .listing > * {
+  display: block;
+  padding: 5px 10px;
+  margin: 0;
+}
+
+.map-overlay .listing a {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: #404;
+  text-decoration: none;
+}
+
+.map-overlay .listing a:last-child {
+  border: none;
+}
+
+.map-overlay .listing a:hover {
+  background: #f0f0f0;
+}
+
+#see-list-button {
+  display: none;
+}
+
+.map-overlay .closebtn {
+  display: none
+}
+
+
+/* Media */
+
+@media only screen and (max-device-width: 480px) {
+
+  .mapboxgl-control-container {
+    display: none;
+  }
+
+  #see-list-button {
+    position: absolute;
+    display: block;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .map-overlay {
+    position: absolute;
+    width: 100%;
+    height: 0%;
+    font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    background-color: #fff;
+    overflow: hidden;
+    transition: 0.5s;
+  }
+
+  .map-overlay .closebtn {
+    position: absolute;
+    display: block;
+    left: 0px;
+    bottom: 25px;
+    width: 100%;
+    text-align: center;
+    font-size: 64px;
+  }
+
 }
