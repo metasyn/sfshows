@@ -1,7 +1,7 @@
 import $ from 'jquery';
 
 import Venues from '../../data/venues.json';
-import getEditDistance from './Util';
+import { getEditDistance } from './Util';
 
 export default class Parser {
   constructor() {
@@ -37,7 +37,7 @@ export default class Parser {
   static getDates($results) {
     const dates = [];
     $results.find('body > li > a').each((i, x) => {
-      dates.push($.trim(x.text));
+      dates.push({ id: i, date: $.trim(x.text), checked: true });
     });
     return dates;
   }
@@ -47,7 +47,7 @@ export default class Parser {
     const organized = {};
 
     for (let i = 0; i < dates.length; i += 1) {
-      organized[dates[i]] = [];
+      organized[dates[i].date] = [];
 
       // Array is zero indexed but nth-child starts at 1
       const index = i + 1;
@@ -61,9 +61,9 @@ export default class Parser {
 
         const deets = $.trim($shows[si].innerText.split('\n').slice(-3, -2));
 
-        organized[dates[i]].push({
+        organized[dates[i].date].push({
           venue: things.shift(),
-          date: dates[i],
+          date: dates[i].date,
           details: deets,
           bands: things,
         });

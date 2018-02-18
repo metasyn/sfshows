@@ -10,46 +10,73 @@ import ShowMap from './components/Map';
 import '../css/stylish.css';
 
 class Application extends Component {
-  static prepare() {
+  constructor(props) {
+    super(props);
+    this.state = {
+      dates: {},
+    };
+    this.toggleCheckbox = this.toggleCheckbox.bind(this);
+  }
+
+  componentWillMount() {
+  }
+
+  toggleCheckbox(date) {
+    const idx = this.state.dates.findIndex((obj => obj.date === date));
+    this.state.dates[idx].checked = !this.state.dates[idx].checked;
+  }
+
+  prepare() {
     const parsed = new Parser().parseData();
 
     // keys: organized, dates
     parsed.then((data) => {
-      // Pop modal?
-      // TODO
+      // Pass dates
+      this.state.dates = data.dates;
 
       // Add the dates
       const dateEl = document.getElementById('date-selector-container');
-      render(<Dates dates={data.dates} />, dateEl);
+      render(<Dates
+        dates={this.state.dates}
+        handleCheckboxChange={this.toggleCheckbox}
+      />, dateEl);
 
       // Add the shows
       const mapEl = document.getElementById('app');
-      render(<ShowMap geojson={data.geojson} />, mapEl);
+      render(<ShowMap
+        dates={this.state.dates}
+        geojson={data.geojson}
+      />, mapEl);
 
-      // Add listeners
+      // Modals
       $('#filter-button').on('click', () => {
-        $('.filters').toggleClass('hidden');
+        $('#filterModal').toggleClass('hidden');
       });
 
-      $('#see-list-button').on('click', () => {
+      $('.close-filter-modal').on('click', () => {
+        $('#filterModal').toggleClass('hidden');
+      });
+
+      // Mobile only
+      $('#see-list-button-mobile').on('click', () => {
         $('.map-overlay').css('height', '100%');
         $('#see-list-button').toggleClass('hidden');
       });
 
-      $('.closebtn').on('click', () => {
+      $('.map-overlay .closebtn').on('click', () => {
         $('.map-overlay').css('height', 0);
         $('#see-list-button').toggleClass('hidden');
       });
     });
   }
 
+
   render() {
-    Application.prepare();
+    this.prepare();
     return (
       <div />
     );
   }
 }
-
 
 render(<Application />, document.getElementById('app'));

@@ -2,51 +2,19 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import _ from 'lodash';
+import $ from 'jquery';
 
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import 'mapboxgl-spiderifier/lib/mapboxgl-spiderifier.css';
+
+import * as Util from './Util';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWV0YXN5biIsImEiOiIwN2FmMDNhNTRhOWQ3NDExODI1MTllMDk1ODc3NTllZiJ9.Bye80QJ4r0RJsKj4Sre6KQ';
 
 const CLUSTER_RADIUS = 50;
 
 class ShowMap extends Component {
-  // Helper utilties
-  static normalize(x) {
-    if (Array.isArray(x)) {
-      return x.map(y => y.trim().toLowerCase());
-    }
-    return x.trim().toLowerCase();
-  }
-
-  static addPopup(map, features, popup) {
-    const venue = `<h1>${features[0].properties.venue}</h1><br/>`;
-    const html = _.map(features, 'properties.showHTML').reverse().join('<hr><br/>');
-    const point = features[0].geometry.coordinates;
-    popup.setLngLat(point)
-      .setHTML(venue + html)
-      .addTo(map);
-  }
-
-  static getUniqueFeatures(array, comparatorProperty) {
-    const existingFeatureKeys = {};
-    // Because features come from tiled vector data, feature geometries may be split
-    // or duplicated across tile boundaries and, as a result, features may appear
-    // multiple times in query results.
-    const uniqueFeatures = array.filter((el) => {
-      if (existingFeatureKeys[el.properties[comparatorProperty]]) {
-        return false;
-      }
-      existingFeatureKeys[el.properties[comparatorProperty]] = true;
-      return true;
-    });
-
-    return uniqueFeatures;
-  }
-
-  // End of static helpers
-
   constructor(props) {
     super(props);
 
@@ -121,13 +89,22 @@ class ShowMap extends Component {
         return ns && ew;
       }
 
+      const showAllShows = (data) => {
+        // todo
+        _.each(this.props.dates, x => _.set(x, 'checked', true));
+        map.getSource('shows').setData(data);
+        map.setFilter('shows', ['has', 'sid']);
+      };
+
       map.on('moveend', () => {
         const bounds = map.getBounds();
+        const checkedDates = _.filter(this.props.dates, _.matches({ checked: true }));
+        const checkedDatesList = _.map(checkedDates, 'date');
         const features = this.props.geojson.features.filter(x =>
-          inBounds(x.geometry.coordinates, bounds));
+          inBounds(x.geometry.coordinates, bounds) && _.includes(checkedDatesList, x.properties.date));
 
         if (features) {
-          const uniqueFeatures = ShowMap.getUniqueFeatures(features, 'bands');
+          const uniqueFeatures = Util.getUniqueFeatures(features, 'bands');
           // Populate features for the listing overlay.
           this.renderListings(map, uniqueFeatures);
 
@@ -147,24 +124,11 @@ class ShowMap extends Component {
 
       map.on('click', 'shows', e => this.addPopupAndEase(map, e));
 
-      /*
-      map.on('mousemove', 'shows', (e) => {
-        // Change the cursor style as a UI indicator.
-        map.getCanvas().style.cursor = 'pointer';
-        ShowMap.addPopup(map, e.features, this.popup);
-      });
-
-      map.on('mouseleave', 'shows', () => {
-        map.getCanvas().style.cursor = '';
-      });
-      */
-
       this.filterEl.addEventListener('keyup', (e) => {
-        const value = ShowMap.normalize(e.target.value);
+        const value = Util.normalize(e.target.value);
         // Unset filter if empty
         if (value === '') {
-          map.getSource('shows').setData(this.props.geojson);
-          map.setFilter('shows', ['has', 'sid']);
+          showAllShows(this.props.geojson);
         }
 
         if (this.popup.getLngLat()) {
@@ -172,11 +136,15 @@ class ShowMap extends Component {
         }
 
         // Filter visible features that don't match the input value.
+        //
+        const checkedDates = _.filter(this.props.dates, _.matches({ checked: true }));
+        const checkedDatesList = _.map(checkedDates, 'date');
         const filtered = this.onscreenShows.filter((feature) => {
-          function match(x) {
-            const prop = ShowMap.normalize(feature.properties[x]);
-            return prop.indexOf(value) > -1;
-          }
+          const selected = _.includes(checkedDatesList, feature.properties.date);
+          const match = (x) => {
+            const prop = Util.normalize(feature.properties[x]);
+            return prop.indexOf(value) > -1 && selected;
+          };
           return Object.keys(feature.properties).some(match);
         });
 
@@ -191,15 +159,20 @@ class ShowMap extends Component {
         });
 
         // Set the filter to populate features into the layer.
-        const filteredBands = filtered.map(feature => feature.properties.sid);
-        map.setFilter('shows', ['in', 'sid'].concat(filteredBands));
+        const filteredShows = filtered.map(feature => feature.properties.sid);
+        map.setFilter('shows', ['in', 'sid'].concat(filteredShows));
       });
 
       // Call this function on initialization
       // passing an empty array to render an empty state
       this.renderListings(map, []);
 
-      //
+      $('#filter-all').on('click', () => {
+        // Util.toggleDates('all');
+        showAllShows(this.props.geojson);
+        this.filterEl.value = '';
+        $('.close-filter-modal').click();
+      });
 
       map.addLayer({
         id: 'clusters',
@@ -209,9 +182,6 @@ class ShowMap extends Component {
         paint: {
           // Use step expressions (https://www.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
           // with three steps to implement three types of circles:
-          //   * Blue, 20px circles when point count is less than 100
-          //   * Yellow, 30px circles when point count is between 100 and 750
-          //   * Pink, 40px circles when point count is greater than or equal to 750
           'circle-color': [
             'step',
             ['get', 'point_count'],
@@ -264,7 +234,7 @@ class ShowMap extends Component {
 
     // Populate the popup and set its coordinates based on the feature.
     if (!e.features[0].properties.cluster) {
-      ShowMap.addPopup(map, e.features, this.popup);
+      Util.addPopup(map, e.features, this.popup);
     }
   }
 
@@ -307,6 +277,7 @@ class ShowMap extends Component {
     }
   }
 
+
   render() {
     return (
       <div>
@@ -319,6 +290,7 @@ class ShowMap extends Component {
 ShowMap.propTypes = {
   // eslint-disable-next-line
   geojson: PropTypes.object.isRequired,
+  dates: PropTypes.array.isRequired,
 };
 
 export default ShowMap;

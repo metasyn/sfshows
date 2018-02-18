@@ -4,18 +4,13 @@ import PropTypes from 'prop-types';
 import DateSelector from './DateSelector';
 
 export default class Dates extends Component {
-  constructor(props) {
-    super(props);
-    this.makeDateSelectors = this.makeDateSelectors.bind(this);
-  }
-
-  makeDateSelectors(dates) {
+  makeDateSelectors = (dates) => {
     const selectors = [];
     for (let d = 0; d < dates.length; d += 1) {
       const selector = (<DateSelector
-        showShows={this.showShows}
-        date={dates[d]}
-        key={dates[d]}
+        date={dates[d].date}
+        key={dates[d].id}
+        handleCheckboxChange={this.props.handleCheckboxChange}
       />);
       selectors.push(selector);
     }
@@ -25,5 +20,7 @@ export default class Dates extends Component {
 }
 
 Dates.propTypes = {
+  // eslint-disable-next-line
   dates: PropTypes.array.isRequired,
+  handleCheckboxChange: PropTypes.func.isRequired,
 };
