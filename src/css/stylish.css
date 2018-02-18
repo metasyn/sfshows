@@ -33,9 +33,10 @@ body {
 
 #date-selector-container {
   display: grid;
+  justify-content: center;
   grid-template-rows: repeat(5, 25px);
-  grid-template-columns: 50% 50%;
-  grid-auto-flow: columns;
+  grid-template-columns: 25% 25%;
+  grid-auto-flow: column;
   grid-auto-columns: 50% 50%;
   margin-left: 50px;
 }
@@ -109,18 +110,11 @@ body {
   margin: 0;
 }
 
-.map-overlay .listing a {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  color: #404;
-  text-decoration: none;
-}
 
-.map-overlay .listing a:last-child {
-  border: none;
-}
-
-.map-overlay .listing a:hover {
-  background: #f0f0f0;
+.map-overlay .listing p:hover {
+  border: #0095ff;
+  border-style: groove;
+  margin: 2px;
 }
 
 #see-list-button {
@@ -132,6 +126,90 @@ body {
 }
 
 
+/* Modal stuff */
+
+.modal {
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+  position: relative;
+  background-color: #fefefe;
+  margin: auto;
+  padding: 0;
+  border: 1px solid #888;
+  width: 80%;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+  -webkit-animation-name: animatetop;
+  -webkit-animation-duration: 0.4s;
+  animation-name: animatetop;
+  animation-duration: 0.4s
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+  from {top:-300px; opacity:0}
+  to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+  from {top:-300px; opacity:0}
+  to {top:0; opacity:1}
+}
+
+/* The Close Button */
+.close-filter-modal {
+  color: white;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-filter-modal:hover,
+.close-filter-modal:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.modal-header {
+  padding: 5px ;
+  background-color: #5cb85c;
+  color: white;
+  height: 35px;
+  font-size: 20px;
+}
+
+.modal-body {padding: 2px 16px;}
+
+.modal-footer {
+  padding: 2px 16px;
+  background-color: #5cb85c;
+  color: white;
+}
+
+#filterModal .buttons {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 20px;
+  text-align: center;
+}
+
+#filterModal .buttons a {
+  margin: 20px;
+}
+
+
 /* Media */
 
 @media only screen and (max-device-width: 480px) {
@@ -140,7 +218,7 @@ body {
     display: none;
   }
 
-  #see-list-button {
+  #see-list-button-mobile {
     position: absolute;
     display: block;
     left: 0px;
@@ -169,4 +247,8 @@ body {
     font-size: 64px;
   }
 
+  #filterModal .buttons {
+    display: flex;
+    flex-direction: column;
+  }
 }
