@@ -7,31 +7,30 @@ export default class DateSelector extends Component {
     this.state = {
       isChecked: true,
     };
+    this.handleChange = this.handleChange.bind(this);
   }
 
-  toggleDateCheckboxChange = () => {
-    const { handleCheckboxChange, date } = this.props;
-
+  handleChange(e) {
+    // Update dates in application for map to use
+    this.props.handleCheckboxChange(e.target.value);
+    // Handle local state
     this.setState(({ isChecked }) => (
       {
         isChecked: !isChecked,
       }
     ));
-
-    handleCheckboxChange(date);
   }
 
   render() {
     const { date } = this.props;
-    const { isChecked } = this.state;
     return (
       <div>
         <input
           type="checkbox"
           name="filters"
           value={date}
-          checked={isChecked}
-          onChange={this.toggleDateCheckboxChange}
+          checked={this.state.isChecked}
+          onChange={this.handleChange}
         /> {date}
       </div>
     );

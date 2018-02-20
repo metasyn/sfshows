@@ -38,9 +38,7 @@ body {
   grid-template-columns: 25% 25%;
   grid-auto-flow: column;
   grid-auto-columns: 50% 50%;
-  margin-left: 50px;
 }
-
 
 /* Mapbox GL Stuff */
 
@@ -212,7 +210,7 @@ body {
 
 /* Media */
 
-@media only screen and (max-device-width: 480px) {
+@media only screen and (max-device-width: 580px) {
 
   .mapboxgl-control-container {
     display: none;
@@ -235,6 +233,10 @@ body {
     background-color: #fff;
     overflow: hidden;
     transition: 0.5s;
+  }
+
+  #date-selector-container {
+    grid-template-columns: unset;  
   }
 
   .map-overlay .closebtn {
