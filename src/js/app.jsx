@@ -22,23 +22,18 @@ class Application extends Component {
     super(props);
     this.toggleCheckbox = this.toggleCheckbox.bind(this);
     this.state = {
+      query: '',
       dates: [],
-      filtered: {
-        date: [],
-        onscreen: [],
-        searched: [],
-      }
+      filteredByDate: [],
+      filteredByMap: [],
+      filteredByQuery: [],
     };
 
     this.allShows = [];
-    this.onscreenShows = [];
 
     this.popup = new mapboxgl.Popup({
       closeButton: false,
     });
-
-    this.filterEl = document.getElementById('feature-filter');
-    this.listingEl = document.getElementById('feature-listing');
 
     this.bindMap = this.bindMap.bind(this);
 
@@ -101,20 +96,14 @@ class Application extends Component {
       const checkedDates = _.filter(this.state.dates, _.matches({ checked: true }));
       const checkedDatesList = _.map(checkedDates, 'date');
 
-      // Filter
-      this.state.filtered.date = this.allShows.filter(feature =>
-        _.includes(checkedDatesList, feature.properties.date));
-
       // Set filter for points
       this.map.setFilter('shows', ['in', 'date'].concat(checkedDatesList));
 
       // Update source, for clusters
       this.map.getSource('shows').setData({
         type: 'FeatureCollection',
-        features: this.state.filtered.date,
+        features: this.state.filteredByDate,
       });
-
-      this.renderListings(this.map, this.state.filtered.date);
     }
   }
 
@@ -183,24 +172,24 @@ class Application extends Component {
 
       const loadOnscreenShows = () => {
         const bounds = map.getBounds();
-        const features = geojson.features.filter(x =>
+        const features = this.state.filteredByDate.filter(x =>
           inBounds(x.geometry.coordinates, bounds) &&
           _.includes(getCheckedDatesList(), x.properties.date));
 
         if (features) {
           const uniqueFeatures = Util.getUniqueFeatures(features, 'bands');
           // Populate features for the listing overlay.
-          this.renderListings(map, uniqueFeatures);
-
-          // Store the current features in sn `onscreenShows` variable to
-          // later use for filtering on `keyup`.
-          this.state.filtered.onscreen = uniqueFeatures;
+          this.setState({ filteredByMap: uniqueFeatures });
         }
       };
 
       map.on('moveend', loadOnscreenShows);
+
       // We are in 'load' listener already
+      this.setState({ filteredByDate: geojson.features });
       loadOnscreenShows();
+      // Set state for first load
+
 
       map.on('click', 'clusters', (e) => {
         map.easeTo({
@@ -211,52 +200,11 @@ class Application extends Component {
 
       map.on('click', 'shows', e => this.addPopupAndEase(map, e));
 
-      this.filterEl.addEventListener('keyup', (e) => {
-        const value = Util.normalize(e.target.value);
-        // Unset filter if empty
-        if (value === '') {
-          showAllShows(geojson);
-        }
-
-        if (this.popup.getLngLat()) {
-          this.popup.remove();
-        }
-
-        // Filter visible features that don't match the input value.
-        const filtered = this.state.filtered.onscreen.filter((feature) => {
-          const selected = _.includes(getCheckedDatesList(), feature.properties.date);
-          const match = (x) => {
-            const prop = Util.normalize(feature.properties[x]);
-            return prop.indexOf(value) > -1 && selected;
-          };
-          return Object.keys(feature.properties).some(match);
-        });
-
-
-        // Populate the sidebar with filtered results
-        this.renderListings(map, filtered);
-
-        // Filter on source, for clusters
-        map.getSource('shows').setData({
-          type: 'FeatureCollection',
-          features: filtered,
-        });
-
-        // Set the filter to populate features into the layer.
-        const filteredShows = filtered.map(feature => feature.properties.sid);
-        map.setFilter('shows', ['in', 'sid'].concat(filteredShows));
-
-        this.state.filtered.searched = filtered;
-      });
-
-      // Call this function on initialization
-      // passing an empty array to render an empty state
-      this.renderListings(map, []);
 
       $('#filter-all').on('click', () => {
         // Util.toggleDates('all');
         showAllShows(geojson);
-        this.filterEl.value = '';
+        // this.filterEl.value = '';
         $('.close-filter-modal').click();
       });
 
@@ -301,11 +249,53 @@ class Application extends Component {
     });
   }
 
+
+  searchBarKeyup(e) {
+    const value = Util.normalize(e.target.value);
+    // Unset filter if empty
+    if (value === '') {
+      // showAllShows(geojson);
+    }
+
+    if (this.popup.getLngLat()) {
+      this.popup.remove();
+    }
+
+    // Filter visible features that don't match the input value.
+    const filtered = this.state.filteredByMap.filter((feature) => {
+      const match = (x) => {
+        const prop = Util.normalize(feature.properties[x]);
+        return prop.indexOf(value) > -1;
+      };
+      return Object.keys(feature.properties).some(match);
+    });
+
+
+    // Filter on source, for clusters
+    this.map.getSource('shows').setData({
+      type: 'FeatureCollection',
+      features: filtered,
+    });
+
+    // Set the filter to populate features into the layer.
+    const filteredShows = filtered.map(feature => feature.properties.sid);
+    this.map.setFilter('shows', ['in', 'sid'].concat(filteredShows));
+
+    this.setState({ filteredByQuery: filtered });
+  }
+
   toggleCheckbox(date) {
     const { dates } = this.state;
     const idx = dates.findIndex((obj => obj.date === date));
     dates[idx].checked = !dates[idx].checked;
-    this.setState({ dates });
+
+    const checkedDates = _.filter(dates, _.matches({ checked: true }));
+    const checkedDatesList = _.map(checkedDates, 'date');
+
+    const filteredByDate = this.allShows.filter(feature =>
+      _.includes(checkedDatesList, feature.properties.date));
+
+    this.setState({ dates, filteredByDate });
   }
 
   addPopupAndEase(map, e) {
@@ -335,47 +325,83 @@ class Application extends Component {
     this.mapContainer = el;
   }
 
-  renderListings(map, features) {
-    // Clear any existing listings
-    this.listingEl.innerHTML = '';
-    if (features.length) {
-      features.forEach((feature) => {
+  render() {
+    // Update the listings
+    const listings = [];
+    const { filteredByDate, filteredByMap } = this.state;
+    const intersection = _.intersection(filteredByDate, filteredByMap);
+    if (intersection.length) {
+      intersection.forEach((feature) => {
         const prop = feature.properties;
-        const item = document.createElement('p');
-        item.textContent = prop.showString;
 
+        // add listener
         const venue = `<h1>${prop.venue}</h1><br/>`;
-        item.addEventListener('mouseover', () => {
+        const popupMouseOver = () => {
           // Highlight corresponding feature on the map
           this.popup.setLngLat(feature.geometry.coordinates)
             .setHTML(venue + prop.showHTML)
-            .addTo(map);
-        });
+            .addTo(this.map);
+        };
 
-        this.listingEl.appendChild(item);
+        const item = (
+          <p key={prop.sid} onMouseOver={popupMouseOver} onFocus={popupMouseOver} >
+            {prop.showString}
+          </p>
+        );
+        listings.push(item);
       });
-
-      // Show the filter input
-      this.filterEl.parentNode.style.display = 'block';
     } else {
-      const empty = document.createElement('p');
-      const text = this.filterEl.value === '' ? 'Drag the map to populate results' : 'No shows match criteria.';
-      empty.textContent = text;
-
-      this.listingEl.appendChild(empty);
-
-      // Hide the filter input
-      this.filterEl.parentNode.style.display = 'block';
-
-      // remove features filter
-      map.setFilter('shows', ['has', 'sid']);
+      const text = this.state.query === '' ? 'Drag the map to populate results' : 'No shows match criteria.';
+      listings.push(<p key="empty">{text}</p>);
     }
-  }
 
-  render() {
     return (
       <div>
         <div ref={this.bindMap} className="absolute top right left bottom" />
+
+        <div id="see-list-button-mobile">
+          <div className="button-container">
+            <a href="#" id="open-list" className="button overlay-item">See List</a>
+          </div>
+        </div>
+
+
+        <div className="map-overlay">
+          <a href="javascript:void(0)" className="closebtn">&#215;</a>
+
+          <fieldset>
+            <input
+              value={this.state.query}
+              onKeyUp={this.searchBarKeyup}
+              className="overlay-item"
+              id="feature-filter"
+              type="text"
+              placeholder="Search results"
+            />
+          </fieldset>
+
+
+          <div className="button-container">
+            <a href="#" id="filter-button" className="button overlay-item">Filter shows</a>
+            <a href="#" id="hide-filter-button" className="hidden button overlay-item">Hide filters</a>
+          </div>
+
+          <div id="filters" className="hidden">
+            <div className="button-container">
+              <a href="#" id="filter-all" className="button">All Shows</a>
+              <a href="#" id="filter-today" className="button">Today</a>
+              <a href="#" id="filter-tomorrow" className="button">Tomorrow</a>
+            </div>
+            <div>
+              <div id="date-selector-container" />
+            </div>
+          </div>
+
+
+          <div id="feature-listing" className="listing">
+            { listings }
+          </div>
+        </div>
       </div>
     );
   }
