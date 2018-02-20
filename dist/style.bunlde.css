@@ -431,67 +431,7 @@ a.mapboxgl-ctrl-logo {
     }
 /* stylelint-enable */
 }
-.spidered-marker {
-  width: 1px;
-  height: 1px;
-  overflow: display;
-  will-change: transform;
-}
-
-.spidered-marker:hover { cursor: pointer }
-
-.spidered-marker .icon-div {
-  position: relative;
-  z-index: 1;
-}
-
-.spidered-marker .line-div {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 2px;
-  background-color: #343434;
-  opacity: 0.45;
-  transform-origin: bottom;
-  z-index: 0;
-  height: 0;
-}
-
-.spidered-marker:hover .line-div { opacity: 1 }
-
-/* Animations specific styles */
-
-.spidered-marker.animate {
-  -webkit-transition: margin 0.15s linear;
-  -moz-transition: margin 0.15s linear;
-  -ms-transition: margin 0.15s linear;
-  -o-transition: margin 0.15s linear;
-  transition: margin 0.15s linear;
-}
-
-.spidered-marker.initial,
-.spidered-marker.exit {
-  margin-left: 0 !important;
-  margin-top: 0 !important;
-  height: 0;
-}
-
-.spidered-marker.animate .line-div {
-  -webkit-transition: all 0.15s linear;
-  -moz-transition: all 0.15s linear;
-  -ms-transition: all 0.15s linear;
-  -o-transition: all 0.15s linear;
-  transition: all 0.15s linear;
-
-  -webkit-transition-delay: inherit;
-  -moz-transition-delay: inherit;
-  -ms-transition-delay: inherit;
-  -o-transition-delay: inherit;
-  transition-delay: inherit;
-}
-
-.spidered-marker.animate.initial .line-div,
-.spidered-marker.animate.exit .line-div { height: 0 !important }body {
+body {
   margin: 0;
   padding: 0;
 }
@@ -505,19 +445,26 @@ a.mapboxgl-ctrl-logo {
 }
 
 .button-container {
-  margin: 10px auto;
   width: 90%;
+  margin: 5%;
 }
 
 .button {
-  background-color: #4CAF50; /* Green */
+  display: block;
   border: none;
+  width: 100%;
+  border-radius: 3px;
+  background-color: #4CAF50; /* Green */
   color: white;
-  padding: 15px 32px;
+  padding: 10px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
   font-size: 16px;
+  margin-bottom: 5%;
+}
+
+#hide-filter-button {
+  background-color: black;
 }
 
 .hidden {
@@ -525,14 +472,15 @@ a.mapboxgl-ctrl-logo {
 }
 
 #date-selector-container {
+  font-size: 16px;
   display: grid;
-  grid-template-rows: repeat(5, 25px);
-  grid-template-columns: 50% 50%;
-  grid-auto-flow: columns;
+  margin-left: 5%;
+  margin-bottom: 5%;
+  grid-template-rows: repeat(5, auto);
+  grid-template-columns: auto auto;
+  grid-auto-flow: column;
   grid-auto-columns: 50% 50%;
-  margin-left: 50px;
 }
-
 
 /* Mapbox GL Stuff */
 
@@ -602,18 +550,11 @@ a.mapboxgl-ctrl-logo {
   margin: 0;
 }
 
-.map-overlay .listing a {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  color: #404;
-  text-decoration: none;
-}
 
-.map-overlay .listing a:last-child {
-  border: none;
-}
-
-.map-overlay .listing a:hover {
-  background: #f0f0f0;
+.map-overlay .listing p:hover {
+  border: #0095ff;
+  border-style: groove;
+  margin: 2px;
 }
 
 #see-list-button {
@@ -627,13 +568,13 @@ a.mapboxgl-ctrl-logo {
 
 /* Media */
 
-@media only screen and (max-device-width: 480px) {
+@media only screen and (max-device-width: 580px) {
 
   .mapboxgl-control-container {
     display: none;
   }
 
-  #see-list-button {
+  #see-list-button-mobile {
     position: absolute;
     display: block;
     left: 0px;
@@ -652,6 +593,10 @@ a.mapboxgl-ctrl-logo {
     transition: 0.5s;
   }
 
+  #date-selector-container {
+    grid-template-columns: unset;  
+  }
+
   .map-overlay .closebtn {
     position: absolute;
     display: block;
@@ -662,4 +607,24 @@ a.mapboxgl-ctrl-logo {
     font-size: 64px;
   }
 
+}
+
+/* Checkbox larger */
+
+@supports (zoom:2) {
+	input[type=checkbox]{
+	zoom: 1.5;
+	}
+}
+@supports not (zoom:2) {
+	input[type=checkbox]{
+		transform: scale(1.5);
+		margin: 15px;
+	}
+}
+label{
+  /* fix vertical align issues */
+	display: inline-block;
+	vertical-align: top;
+	margin-top: 10px;
 }
