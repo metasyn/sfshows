@@ -23,8 +23,14 @@ class Application extends Component {
     this.toggleCheckbox = this.toggleCheckbox.bind(this);
     this.state = {
       dates: [],
+      filtered: {
+        date: [],
+        onscreen: [],
+        searched: [],
+      }
     };
 
+    this.allShows = [];
     this.onscreenShows = [];
 
     this.popup = new mapboxgl.Popup({
@@ -51,6 +57,7 @@ class Application extends Component {
     parsed.then((data) => {
       // Set the selected dates
       this.setState({ dates: data.dates });
+      this.allShows = data.geojson.features;
 
       // Add the dates
       const dateEl = document.getElementById('date-selector-container');
@@ -63,11 +70,15 @@ class Application extends Component {
 
       // Modals
       $('#filter-button').on('click', () => {
-        $('#filterModal').toggleClass('hidden');
+        $('#filter-button').toggleClass('hidden');
+        $('#hide-filter-button').toggleClass('hidden');
+        $('#filters').toggleClass('hidden');
       });
 
-      $('.close-filter-modal').on('click', () => {
-        $('#filterModal').toggleClass('hidden');
+      $('#hide-filter-button').on('click', () => {
+        $('#filter-button').toggleClass('hidden');
+        $('#hide-filter-button').toggleClass('hidden');
+        $('#filters').toggleClass('hidden');
       });
 
       // Mobile only
@@ -91,7 +102,7 @@ class Application extends Component {
       const checkedDatesList = _.map(checkedDates, 'date');
 
       // Filter
-      const filtered = this.onscreenShows.filter(feature =>
+      this.state.filtered.date = this.allShows.filter(feature =>
         _.includes(checkedDatesList, feature.properties.date));
 
       // Set filter for points
@@ -100,10 +111,10 @@ class Application extends Component {
       // Update source, for clusters
       this.map.getSource('shows').setData({
         type: 'FeatureCollection',
-        features: filtered,
+        features: this.state.filtered.date,
       });
 
-      this.renderListings(this.map, filtered);
+      this.renderListings(this.map, this.state.filtered.date);
     }
   }
 
@@ -143,7 +154,7 @@ class Application extends Component {
         type: 'circle',
         source: 'shows',
         paint: {
-          'circle-color': '#11b4da',
+          'circle-color': '#4CAF50',
           'circle-radius': 10,
           'circle-stroke-width': 1,
           'circle-stroke-color': '#fff',
@@ -183,7 +194,7 @@ class Application extends Component {
 
           // Store the current features in sn `onscreenShows` variable to
           // later use for filtering on `keyup`.
-          this.onscreenShows = uniqueFeatures;
+          this.state.filtered.onscreen = uniqueFeatures;
         }
       };
 
@@ -212,7 +223,7 @@ class Application extends Component {
         }
 
         // Filter visible features that don't match the input value.
-        const filtered = this.onscreenShows.filter((feature) => {
+        const filtered = this.state.filtered.onscreen.filter((feature) => {
           const selected = _.includes(getCheckedDatesList(), feature.properties.date);
           const match = (x) => {
             const prop = Util.normalize(feature.properties[x]);
@@ -234,6 +245,8 @@ class Application extends Component {
         // Set the filter to populate features into the layer.
         const filteredShows = filtered.map(feature => feature.properties.sid);
         map.setFilter('shows', ['in', 'sid'].concat(filteredShows));
+
+        this.state.filtered.searched = filtered;
       });
 
       // Call this function on initialization
@@ -330,6 +343,7 @@ class Application extends Component {
         const prop = feature.properties;
         const item = document.createElement('p');
         item.textContent = prop.showString;
+
         const venue = `<h1>${prop.venue}</h1><br/>`;
         item.addEventListener('mouseover', () => {
           // Highlight corresponding feature on the map
@@ -337,6 +351,7 @@ class Application extends Component {
             .setHTML(venue + prop.showHTML)
             .addTo(map);
         });
+
         this.listingEl.appendChild(item);
       });
 
@@ -346,6 +361,7 @@ class Application extends Component {
       const empty = document.createElement('p');
       const text = this.filterEl.value === '' ? 'Drag the map to populate results' : 'No shows match criteria.';
       empty.textContent = text;
+
       this.listingEl.appendChild(empty);
 
       // Hide the filter input

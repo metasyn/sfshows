@@ -31,40 +31,28 @@
 
     <div class='button-container'>
       <a href='#' id='filter-button' class='button overlay-item'>Filter shows</a>
+      <a href='#' id='hide-filter-button' class='hidden button overlay-item'>Hide filters</a>
+    </div>
+
+    <div id="filters" class="hidden">
+      <div class="button-container">
+        <a href='#' id='filter-all' class='button'>All Shows</a>
+        <a href='#' id='filter-today' class='button'>Today</a>
+        <a href='#' id='filter-tomorrow' class='button'>Tomorrow</a>
+      </div>
+      <div>
+        <div id='date-selector-container'>
+        </div>
+      </div>
     </div>
 
 
     <div id='feature-listing' class='listing'>
     </div>
-
-
-    <div id="filterModal" class="hidden modal">
-      <!-- Modal content -->
-
-
-      <div class="modal-content">
-        <div class="modal-header">
-          <span class="close-filter-modal">&#215;</span>
-          <h1>Filter shows by date</h1>
-        </div>
-
-
-        <div class="modal-body">
-          <div class="buttons">
-            <a href='#' id='filter-all' class='button'>All Shows</a>
-            <a href='#' id='filter-today' class='button'>Today</a>
-            <a href='#' id='filter-tomorrow' class='button'>Tomorrow</a>
-          </div>
-          <div>
-            <div id='date-selector-container'>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer"> 
-        </div>
-      </div>
-    </div>
   </div>
+
+
+
   <script src='https://api.mapbox.com/mapbox-assembly/mbx/v0.18.0/assembly.js' type="text/javascript">
 </script>
 </body>
