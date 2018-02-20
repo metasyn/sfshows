@@ -4,7 +4,12 @@ import PropTypes from 'prop-types';
 import DateSelector from './DateSelector';
 
 export default class Dates extends Component {
-  makeDateSelectors = (dates) => {
+  constructor(props) {
+    super(props);
+    this.makeDateSelectors = this.makeDateSelectors.bind(this);
+  }
+
+  makeDateSelectors(dates) {
     const selectors = [];
     for (let d = 0; d < dates.length; d += 1) {
       const selector = (<DateSelector
