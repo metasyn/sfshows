@@ -3,5 +3,8 @@ module.exports = {
   env: {
     "browser": true
   },
-  parser: "babel-eslint"
+  parser: "babel-eslint",
+  rules: {
+    "no-param-reassign": "off",
+  }
 }

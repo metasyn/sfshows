@@ -20,7 +20,7 @@ const CLUSTER_RADIUS = 50;
 class Application extends Component {
   constructor(props) {
     super(props);
-    this.toggleCheckbox = this.toggleCheckbox.bind(this);
+
     this.state = {
       query: '',
       dates: [],
@@ -36,6 +36,10 @@ class Application extends Component {
     });
 
     this.bindMap = this.bindMap.bind(this);
+    this.filterAll = this.filterAll.bind(this);
+    this.filterToday = this.filterToday.bind(this);
+    this.filterTomorrow = this.filterTomorrow.bind(this);
+    this.toggleCheckbox = this.toggleCheckbox.bind(this);
 
     this.start = {
       lng: -122.416,
@@ -54,12 +58,6 @@ class Application extends Component {
       this.setState({ dates: data.dates });
       this.allShows = data.geojson.features;
 
-      // Add the dates
-      const dateEl = document.getElementById('date-selector-container');
-      render(<Dates
-        dates={this.state.dates}
-        handleCheckboxChange={this.toggleCheckbox}
-      />, dateEl);
 
       this.setupMap(data.geojson, this.state.dates);
 
@@ -95,6 +93,13 @@ class Application extends Component {
       // Get valid dates
       const checkedDates = _.filter(this.state.dates, _.matches({ checked: true }));
       const checkedDatesList = _.map(checkedDates, 'date');
+
+      // Add the dates
+      const dateEl = document.getElementById('date-selector-container');
+      render(<Dates
+        dates={this.state.dates}
+        handleCheckboxChange={this.toggleCheckbox}
+      />, dateEl);
 
       // Set filter for points
       this.map.setFilter('shows', ['in', 'date'].concat(checkedDatesList));
@@ -198,14 +203,18 @@ class Application extends Component {
         });
       });
 
-      map.on('click', 'shows', e => this.addPopupAndEase(map, e));
+      map.on('click', (e) => {
+        const m = 50;
+        const bbox = [[e.point.x - m, e.point.y - m], [e.point.x + m, e.point.y + m]];
+        const features = map.queryRenderedFeatures(bbox, { layers: ['shows'] });
 
-
-      $('#filter-all').on('click', () => {
-        // Util.toggleDates('all');
-        showAllShows(geojson);
-        // this.filterEl.value = '';
-        $('.close-filter-modal').click();
+        this.popup.remove();
+        if (features.length) {
+          this.addPopupAndEase(map, { features });
+          // Hack to make popups work everytime
+          // eslint-disable-next-line
+          e.target._listeners['click'].pop();
+        }
       });
 
       map.addLayer({
@@ -289,13 +298,8 @@ class Application extends Component {
     const idx = dates.findIndex((obj => obj.date === date));
     dates[idx].checked = !dates[idx].checked;
 
-    const checkedDates = _.filter(dates, _.matches({ checked: true }));
-    const checkedDatesList = _.map(checkedDates, 'date');
-
-    const filteredByDate = this.allShows.filter(feature =>
-      _.includes(checkedDatesList, feature.properties.date));
-
-    this.setState({ dates, filteredByDate });
+    this.updateFilteredByDate(dates);
+    this.setState({ dates });
   }
 
   addPopupAndEase(map, e) {
@@ -319,6 +323,60 @@ class Application extends Component {
     if (!e.features[0].properties.cluster) {
       Util.addPopup(map, e.features, this.popup);
     }
+  }
+
+  updateFilteredByDate(dates) {
+    const checkedDates = _.filter(dates, _.matches({ checked: true }));
+    const checkedDatesList = _.map(checkedDates, 'date');
+
+    const filteredByDate = this.allShows.filter(feature =>
+      _.includes(checkedDatesList, feature.properties.date));
+
+    this.setState({ filteredByDate });
+  }
+
+
+  filterAll() {
+    const { dates } = this.state;
+    const allDates = _.map(dates, (date) => {
+      date.checked = true; return date;
+    });
+
+    this.setState({
+      dates: allDates,
+      query: '',
+    });
+
+    this.updateFilteredByDate(dates);
+
+    $('#hide-filter-button').click();
+  }
+
+  filterDate(newDate) {
+    const { dates } = this.state;
+
+    const newDates = _.map(dates, (dateObj) => {
+      const someday = newDate.toString().slice(0, 10);
+      const somedayList = someday.split(' ');
+      somedayList[2] = String(parseInt(somedayList[2], 10));
+      const date = somedayList.join(' ');
+      dateObj.checked = dateObj.date === date;
+      return dateObj;
+    });
+
+    this.setState({ dates: newDates });
+    this.updateFilteredByDate(dates);
+    $('#hide-filter-button').click();
+  }
+
+  filterToday() {
+    this.filterDate(new Date());
+  }
+
+  filterTomorrow() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    this.filterDate(tomorrow);
   }
 
   bindMap(el) {
@@ -361,13 +419,13 @@ class Application extends Component {
 
         <div id="see-list-button-mobile">
           <div className="button-container">
-            <a href="#" id="open-list" className="button overlay-item">See List</a>
+            <button href="#" id="open-list" className="button overlay-item">See List</button>
           </div>
         </div>
 
 
         <div className="map-overlay">
-          <a href="javascript:void(0)" className="closebtn">&#215;</a>
+          <button className="closebtn">&#215;</button>
 
           <fieldset>
             <input
@@ -382,15 +440,15 @@ class Application extends Component {
 
 
           <div className="button-container">
-            <a href="#" id="filter-button" className="button overlay-item">Filter shows</a>
-            <a href="#" id="hide-filter-button" className="hidden button overlay-item">Hide filters</a>
+            <button id="filter-button" className="button overlay-item">Filter shows</button>
+            <button id="hide-filter-button" className="hidden button overlay-item">Hide filters</button>
           </div>
 
           <div id="filters" className="hidden">
             <div className="button-container">
-              <a href="#" id="filter-all" className="button">All Shows</a>
-              <a href="#" id="filter-today" className="button">Today</a>
-              <a href="#" id="filter-tomorrow" className="button">Tomorrow</a>
+              <button id="filter-today" onClick={this.filterToday} className="button">Today</button>
+              <button id="filter-tomorrow" onClick={this.filterTomorrow} className="button">Tomorrow</button>
+              <button id="filter-all" onClick={this.filterAll} className="button">All Shows</button>
             </div>
             <div>
               <div id="date-selector-container" />

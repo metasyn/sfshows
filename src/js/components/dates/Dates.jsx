@@ -15,6 +15,7 @@ export default class Dates extends Component {
       const selector = (<DateSelector
         date={dates[d].date}
         key={dates[d].id}
+        isChecked={dates[d].checked}
         handleCheckboxChange={this.props.handleCheckboxChange}
       />);
       selectors.push(selector);
