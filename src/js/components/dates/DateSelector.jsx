@@ -5,9 +5,14 @@ export default class DateSelector extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isChecked: true,
+      isChecked: this.props.isChecked,
     };
     this.handleChange = this.handleChange.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { isChecked } = nextProps;
+    this.setState({ isChecked });
   }
 
   handleChange(e) {
@@ -39,6 +44,7 @@ export default class DateSelector extends Component {
 
 DateSelector.propTypes = {
   date: PropTypes.string.isRequired,
+  isChecked: PropTypes.bool.isRequired,
   handleCheckboxChange: PropTypes.func.isRequired,
 };
 

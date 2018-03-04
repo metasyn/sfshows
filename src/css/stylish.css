@@ -41,11 +41,8 @@ body {
 #date-selector-container {
   font-size: 16px;
   display: grid;
-  margin-left: 5%;
+  margin-left: 10%;
   margin-bottom: 5%;
-  grid-template-rows: repeat(5, auto);
-  grid-template-columns: auto auto;
-  grid-auto-flow: column;
   grid-auto-columns: 50% 50%;
 }
 
@@ -58,7 +55,7 @@ body {
 
 .mapboxgl-popup-content {
   font-family: 'Open Sans', sans-serif;
-  overflow: scroll;
+  overflow: auto;
 }
 
 .mapboxgl-popup-content h1 {
