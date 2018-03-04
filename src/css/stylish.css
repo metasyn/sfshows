@@ -59,15 +59,15 @@ body {
 }
 
 .mapboxgl-popup-content h1 {
+  font-size: 24px;
+}
+
+.mapboxgl-popup-content h2 {
   font-size: 20px;
 }
 
-.mapboxgl-popup-content h2 {
+.mapboxgl-popup-content h3 {
   font-size: 16px;
-}
-
-.mapboxgl-popup-content h2 {
-  font-size: 14px;
 }
 
 .map-overlay {
@@ -80,6 +80,7 @@ body {
   background-color: #fff;
   max-height: 100%;
   overflow: hidden;
+  font-size: 14px;
 }
 
 #feature-listing p:nth-child(odd) {
