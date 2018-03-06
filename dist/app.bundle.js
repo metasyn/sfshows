@@ -28636,7 +28636,6 @@ var Application = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (Application.__proto__ || Object.getPrototypeOf(Application)).call(this, props));
 
-    _this.toggleCheckbox = _this.toggleCheckbox.bind(_this);
     _this.state = {
       query: '',
       dates: [],
@@ -28652,6 +28651,10 @@ var Application = function (_Component) {
     });
 
     _this.bindMap = _this.bindMap.bind(_this);
+    _this.filterAll = _this.filterAll.bind(_this);
+    _this.filterToday = _this.filterToday.bind(_this);
+    _this.filterTomorrow = _this.filterTomorrow.bind(_this);
+    _this.toggleCheckbox = _this.toggleCheckbox.bind(_this);
 
     _this.start = {
       lng: -122.416,
@@ -28673,13 +28676,6 @@ var Application = function (_Component) {
         // Set the selected dates
         _this2.setState({ dates: data.dates });
         _this2.allShows = data.geojson.features;
-
-        // Add the dates
-        var dateEl = document.getElementById('date-selector-container');
-        (0, _reactDom.render)(_react2.default.createElement(_Dates2.default, {
-          dates: _this2.state.dates,
-          handleCheckboxChange: _this2.toggleCheckbox
-        }), dateEl);
 
         _this2.setupMap(data.geojson, _this2.state.dates);
 
@@ -28718,6 +28714,13 @@ var Application = function (_Component) {
         // Get valid dates
         var checkedDates = _lodash2.default.filter(this.state.dates, _lodash2.default.matches({ checked: true }));
         var checkedDatesList = _lodash2.default.map(checkedDates, 'date');
+
+        // Add the dates
+        var dateEl = document.getElementById('date-selector-container');
+        (0, _reactDom.render)(_react2.default.createElement(_Dates2.default, {
+          dates: this.state.dates,
+          handleCheckboxChange: this.toggleCheckbox
+        }), dateEl);
 
         // Set filter for points
         this.map.setFilter('shows', ['in', 'date'].concat(checkedDatesList));
@@ -28827,15 +28830,18 @@ var Application = function (_Component) {
           });
         });
 
-        map.on('click', 'shows', function (e) {
-          return _this3.addPopupAndEase(map, e);
-        });
+        map.on('click', function (e) {
+          var m = 50;
+          var bbox = [[e.point.x - m, e.point.y - m], [e.point.x + m, e.point.y + m]];
+          var features = map.queryRenderedFeatures(bbox, { layers: ['shows'] });
 
-        (0, _jquery2.default)('#filter-all').on('click', function () {
-          // Util.toggleDates('all');
-          showAllShows(geojson);
-          // this.filterEl.value = '';
-          (0, _jquery2.default)('.close-filter-modal').click();
+          _this3.popup.remove();
+          if (features.length) {
+            _this3.addPopupAndEase(map, { features: features });
+            // Hack to make popups work everytime
+            // eslint-disable-next-line
+            e.target._listeners['click'].pop();
+          }
         });
 
         map.addLayer({
@@ -28908,14 +28914,8 @@ var Application = function (_Component) {
       });
       dates[idx].checked = !dates[idx].checked;
 
-      var checkedDates = _lodash2.default.filter(dates, _lodash2.default.matches({ checked: true }));
-      var checkedDatesList = _lodash2.default.map(checkedDates, 'date');
-
-      var filteredByDate = this.allShows.filter(function (feature) {
-        return _lodash2.default.includes(checkedDatesList, feature.properties.date);
-      });
-
-      this.setState({ dates: dates, filteredByDate: filteredByDate });
+      this.updateFilteredByDate(dates);
+      this.setState({ dates: dates });
     }
   }, {
     key: 'addPopupAndEase',
@@ -28940,6 +28940,67 @@ var Application = function (_Component) {
       if (!e.features[0].properties.cluster) {
         Util.addPopup(map, e.features, this.popup);
       }
+    }
+  }, {
+    key: 'updateFilteredByDate',
+    value: function updateFilteredByDate(dates) {
+      var checkedDates = _lodash2.default.filter(dates, _lodash2.default.matches({ checked: true }));
+      var checkedDatesList = _lodash2.default.map(checkedDates, 'date');
+
+      var filteredByDate = this.allShows.filter(function (feature) {
+        return _lodash2.default.includes(checkedDatesList, feature.properties.date);
+      });
+
+      this.setState({ filteredByDate: filteredByDate });
+    }
+  }, {
+    key: 'filterAll',
+    value: function filterAll() {
+      var dates = this.state.dates;
+
+      var allDates = _lodash2.default.map(dates, function (date) {
+        date.checked = true;return date;
+      });
+
+      this.setState({
+        dates: allDates,
+        query: ''
+      });
+
+      this.updateFilteredByDate(dates);
+
+      (0, _jquery2.default)('#hide-filter-button').click();
+    }
+  }, {
+    key: 'filterDate',
+    value: function filterDate(newDate) {
+      var dates = this.state.dates;
+
+
+      var newDates = _lodash2.default.map(dates, function (dateObj) {
+        var someday = newDate.toString().slice(0, 10);
+        var somedayList = someday.split(' ');
+        somedayList[2] = String(parseInt(somedayList[2], 10));
+        var date = somedayList.join(' ');
+        dateObj.checked = dateObj.date === date;
+        return dateObj;
+      });
+
+      this.setState({ dates: newDates });
+      this.updateFilteredByDate(dates);
+      (0, _jquery2.default)('#hide-filter-button').click();
+    }
+  }, {
+    key: 'filterToday',
+    value: function filterToday() {
+      this.filterDate(new Date());
+    }
+  }, {
+    key: 'filterTomorrow',
+    value: function filterTomorrow() {
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      this.filterDate(tomorrow);
     }
   }, {
     key: 'bindMap',
@@ -28996,7 +29057,7 @@ var Application = function (_Component) {
             'div',
             { className: 'button-container' },
             _react2.default.createElement(
-              'a',
+              'button',
               { href: '#', id: 'open-list', className: 'button overlay-item' },
               'See List'
             )
@@ -29006,8 +29067,8 @@ var Application = function (_Component) {
           'div',
           { className: 'map-overlay' },
           _react2.default.createElement(
-            'a',
-            { href: 'javascript:void(0)', className: 'closebtn' },
+            'button',
+            { className: 'closebtn' },
             '\xD7'
           ),
           _react2.default.createElement(
@@ -29026,13 +29087,13 @@ var Application = function (_Component) {
             'div',
             { className: 'button-container' },
             _react2.default.createElement(
-              'a',
-              { href: '#', id: 'filter-button', className: 'button overlay-item' },
+              'button',
+              { id: 'filter-button', className: 'button overlay-item' },
               'Filter shows'
             ),
             _react2.default.createElement(
-              'a',
-              { href: '#', id: 'hide-filter-button', className: 'hidden button overlay-item' },
+              'button',
+              { id: 'hide-filter-button', className: 'hidden button overlay-item' },
               'Hide filters'
             )
           ),
@@ -29043,19 +29104,19 @@ var Application = function (_Component) {
               'div',
               { className: 'button-container' },
               _react2.default.createElement(
-                'a',
-                { href: '#', id: 'filter-all', className: 'button' },
-                'All Shows'
-              ),
-              _react2.default.createElement(
-                'a',
-                { href: '#', id: 'filter-today', className: 'button' },
+                'button',
+                { id: 'filter-today', onClick: this.filterToday, className: 'button' },
                 'Today'
               ),
               _react2.default.createElement(
-                'a',
-                { href: '#', id: 'filter-tomorrow', className: 'button' },
+                'button',
+                { id: 'filter-tomorrow', onClick: this.filterTomorrow, className: 'button' },
                 'Tomorrow'
+              ),
+              _react2.default.createElement(
+                'button',
+                { id: 'filter-all', onClick: this.filterAll, className: 'button' },
+                'All Shows'
               )
             ),
             _react2.default.createElement(
@@ -47186,7 +47247,7 @@ exports.default = Parser;
 /* 36 */
 /***/ (function(module, exports) {
 
-module.exports = {"1234":[-122.261149,37.8284424],"518 Valencia, S.F.":[-122.4243926,37.7644923],"924 Gilman St, Berkeley":[-122.2993211,37.8795371],"924 Gilman Street, Berkeley":[-122.2993211,37.8795371],"Ace of Spades, Sacramento":[-121.493135,38.569915],"Adobe Books, 3130 24th St., S.F.":[-122.4148131,37.7526611],"Amnesia, 853 Valencia at 20th, S.F.":[-122.4233043,37.75931],"Amnesia, S.F.":[-122.4233043,37.75931],"Amoeba Music, S.F.":[-122.4548087,37.768922],"Annex, 468 3rd Street, Oakland":[-122.2766342,37.7972863],"Armory, S.F.":[-122.422769,37.767817],"Artist's Television Access, 992 Valencia St., S.F.":[-122.4236529,37.7570751],"Bar Fluxus, 18 Harlan Place, S.F.":[-122.4072407,37.7901782],"Bender's, S.F.":[-122.4194942,37.7601859],"Bimbo's 365 Club, S.F.":[-122.4155251,37.8037564],"Blue Lagoon, Santa Cruz":[-122.027686,36.970585],"Blue Lamp Lounge, Sacramento":[-121.4674875,38.5682409],"Bottom of the Hill, S.F.":[-122.3986239,37.7649937],"Brick and Mortar, S.F.":[-122.4226282,37.7697351],"Cache Creek Casino Resort, Brooks":[-122.144335,38.73433],"Cafe du Nord, S.F.":[-122.4304562,37.7667174],"Caravan Lounge, San Jose":[-121.8946633,37.3329336],"Catalyst Atrium, Santa Cruz":[-122.0259175,36.9712949],"Catalyst, Santa Cruz":[-122.0281115,36.9712992],"Chapel, S.F.":[-122.421198,37.760528],"Civic Auditorium, S.F.":[-122.4196313,37.778145],"Civic Center, 99 Grove Street, S.F.":[-122.4195095,37.7780757],"Civic Center, S.F.":[-122.4195095,37.7780757],"Cornerstone, Berkeley":[-122.2671952,37.8663488],"Crate, 420 14th Street, Oakland":[-122.2703209,37.8042683],"Crepe Place, Santa Cruz":[-122.010885,36.9794485],"Crest Theater, Sacramento":[-121.4934595,38.5792338],"DNA Lounge, S.F.":[-122.4126746,37.7710559],"Eagle, S.F.":[-122.4133666,37.7700044],"El Rey Theater, Chico":[-121.8441985,39.7295038],"El Rio, S.F.":[-122.4216143,37.7468],"Elbo Room, S.F.":[-122.4215391,37.7625099],"Eli's Mile High Club, Oakland":[-122.269671,37.825786],"Empress Theater, Vallejo":[-122.2593931,38.1022401],"Fillmore, S.F.":[-122.4352607,37.7839302],"First Church of the Buzzard, 2601 Adeline, Oakland":[-122.2832775,37.8189917],"Fox Theater, Oakland":[-122.2722522,37.8080016],"Golden 1 Center, Sacramento":[-121.5018131,38.5806415],"Golden Bull, Oakland":[-122.2724634,37.8042002],"Great American Music Hall, S.F.":[-122.4210104,37.784807],"Great Northern, 119 Utah at 15th, S.F.":[-122.406567,37.7676388],"Greek Theater, UC Berkeley Campus":[-122.2566602,37.8735759],"Harlow's, Sacramento":[-121.4701893,38.573828],"Hatch, 402 15th Street, Oakland":[-122.2717416,37.8050561],"Hemlock, S.F.":[-122.420301,37.787356],"Honey Hive Gallery, 4117 Judah Street, S.F.":[-122.5063551,37.7601905],"Hotel Utah, S.F.":[-122.4002777,37.7793954],"Independent, S.F.":[-122.4398436,37.7755465],"Institute for Integral Studies, 1453 Mission Street, S.F.":[-122.4185198,37.7746224],"Ivy Room, Albany":[-122.299261,37.890476],"Ivy Room, S.F.":[-122.301455,37.890476],"Jazzschool, 2087 Addison Street, Berkeley":[-122.2709651,37.8712507],"Knockout, S.F.":[-122.4221129,37.7451999],"Legionnaire Saloon, Oakland":[-122.2708187,37.8123826],"Lobot Gallery, 1800 Campbell St., Oakland":[-122.2948787,37.814835],"Longboard Margarita Bar, Pacifica":[-122.4903071,37.6332222],"Lost Church, 65 Capp, S.F.":[-122.418409,37.765783],"Maltese, 1600 Park Avenue, Chico":[-121.8271249,39.7212474],"Masonic, S.F":[-122.4153748,37.7912915],"Masonic, S.F.":[-122.4153747,37.791287],"Memorial Auditorium, 1515 J Street, Sacramento":[-121.4879175,38.5788426],"Merchants Saloon, 401 2nd Street, Oakland":[-122.2775095,37.7954984],"Metro, Oakland":[-122.2777909,37.797058],"Mezzanine, S.F.":[-122.4102674,37.7825541],"Milk Bar, 1840 Haight St., S.F.":[-122.4548054,37.7695363],"Monarch, 101 6th Street, S.F.":[-122.410645,37.7810082],"Montbleu Resort, 55 Highway 50, Stateline NV":[-119.9412362,38.9612432],"Music City, 1353 Bush Street, S.F.":[-122.4195814,37.7885446],"Neck of the Woods, S.F.":[-122.4657314,37.784179],"New Parish, Oakland":[-122.2747969,37.8076511],"Night Light, Oakland":[-122.2781325,37.7971539],"Nor Cal Open Jam, R Place Music Hall, Livermore":[-121.7661488,37.6845132],"Octopus Literary Salon, Oakland":[-122.2676085,37.8104379],"Phoenix Theater, Petaluma":[-122.6430667,38.2348794],"Planet Gemini, 2110 Fremont Street, Monterey":[-121.861826,36.595963],"Plough and Stars, 116 Clement St., S.F.":[-122.4627223,37.7832646],"Plough and Stars, S.F.":[-122.4605347,37.7832657],"Public Works, 161 Erie Street at Mission, S.F.":[-122.4194268,37.7688759],"Regency Ballroom, S.F.":[-122.421573,37.787836],"Reno Events Center, 400 N Center St., Reno, NV":[-119.8124811,39.53085],"Rickshaw Stop, S.F.":[-122.422641,37.7760029],"Rite Spot, S.F.":[-122.4149695,37.7638409],"Robert Mondavi Winery, Oakville":[-122.4096888,38.4414921],"Second Act, 1727 Haight Street, S.F.":[-122.4534067,37.769298],"Senator Theater, Chico":[-121.8397472,39.728102],"Sharon Meadow, Golden Gate Park, S.F.":[-122.4576422,37.7680894],"Shoreline Amphitheater, Mountain View":[-122.080765,37.4268879],"Slim's, S.F.":[-122.4154437,37.7714655],"Social Hall, S.F.":[-122.4234378,37.7877708],"Starline Social Club, 2232 MLK, Oakland":[-122.27253,37.8122828],"Starline Social Club, Oakland":[-122.272508,37.812282],"Stork Club, Oakland":[-122.2706259,37.8131318],"Streetlight Records, Santa Cruz":[-122.0253594,36.9707881],"Sweetwater Music Hall, Mill Valley":[-122.550201,37.9069745],"Terrapin Crossroads, San Rafael":[-122.5187867,37.9682163],"Thee Parkside, S.F.":[-122.3999114,37.765222],"Thunder Valley Casino, 1200 Athens Avenue, Lincoln":[-121.3146373,38.8407112],"UC Theater, Berkeley":[-122.2719536,37.8718207],"Warfield, S.F.":[-122.4123447,37.782739]}
+module.exports = {"1234":[-122.261149,37.8284424],"518 Valencia, S.F.":[-122.4243926,37.7644923],"924 Gilman St, Berkeley":[-122.2993211,37.8795371],"924 Gilman Street, Berkeley":[-122.2993211,37.8795371],"Ace of Spades, Sacramento":[-121.493135,38.569915],"Adobe Books, 3130 24th St., S.F.":[-122.4148131,37.7526611],"Amnesia, 853 Valencia at 20th, S.F.":[-122.4233043,37.75931],"Amnesia, S.F.":[-122.4233043,37.75931],"Amoeba Music, S.F.":[-122.4548087,37.768922],"Annex, 468 3rd Street, Oakland":[-122.2766342,37.7972863],"Armory, S.F.":[-122.422769,37.767817],"Artist's Television Access, 992 Valencia St., S.F.":[-122.4236529,37.7570751],"Bar Fluxus, 18 Harlan Place, S.F.":[-122.4072407,37.7901782],"Bender's, S.F.":[-122.4194942,37.7601859],"Bimbo's 365 Club, S.F.":[-122.4155251,37.8037564],"Blue Lagoon, Santa Cruz":[-122.027686,36.970585],"Blue Lamp Lounge, Sacramento":[-121.4674875,38.5682409],"Bottom of the Hill, S.F.":[-122.3986239,37.7649937],"Brick and Mortar, S.F.":[-122.4226282,37.7697351],"Cache Creek Casino Resort, Brooks":[-122.144335,38.73433],"Cafe du Nord, S.F.":[-122.4304562,37.7667174],"Caravan Lounge, San Jose":[-121.8946633,37.3329336],"Catalyst Atrium, Santa Cruz":[-122.0259175,36.9712949],"Catalyst, Santa Cruz":[-122.0281115,36.9712992],"Chapel, S.F.":[-122.421198,37.760528],"Civic Auditorium, S.F.":[-122.4196313,37.778145],"Civic Center, 99 Grove Street, S.F.":[-122.4195095,37.7780757],"Civic Center, S.F.":[-122.4195095,37.7780757],"Cornerstone, Berkeley":[-122.2671952,37.8663488],"Crate, 420 14th Street, Oakland":[-122.2703209,37.8042683],"Crepe Place, Santa Cruz":[-122.010885,36.9794485],"Crest Theater, Sacramento":[-121.4934595,38.5792338],"DNA Lounge, S.F.":[-122.4126746,37.7710559],"Eagle, S.F.":[-122.4133666,37.7700044],"El Rey Theater, Chico":[-121.8441985,39.7295038],"El Rio, S.F.":[-122.4216143,37.7468],"Elbo Room, S.F.":[-122.4215391,37.7625099],"Eli's Mile High Club, Oakland":[-122.269671,37.825786],"Empress Theater, Vallejo":[-122.2593931,38.1022401],"Fillmore, S.F.":[-122.4352607,37.7839302],"First Church of the Buzzard, 2601 Adeline, Oakland":[-122.2832775,37.8189917],"Fox Theater, Oakland":[-122.2722522,37.8080016],"Golden 1 Center, Sacramento":[-121.5018131,38.5806415],"Golden Bull, Oakland":[-122.2724634,37.8042002],"Great American Music Hall, S.F.":[-122.4210104,37.784807],"Great Northern, 119 Utah at 15th, S.F.":[-122.406567,37.7676388],"Greek Theater, UC Berkeley Campus":[-122.2566602,37.8735759],"Harlow's, Sacramento":[-121.4701893,38.573828],"Hatch, 402 15th Street, Oakland":[-122.2717416,37.8050561],"Hemlock, S.F.":[-122.420301,37.787356],"Honey Hive Gallery, 4117 Judah Street, S.F.":[-122.5063551,37.7601905],"Hotel Utah, S.F.":[-122.4002777,37.7793954],"Independent, S.F.":[-122.4372834,37.7767254],"Institute for Integral Studies, 1453 Mission Street, S.F.":[-122.4185198,37.7746224],"Ivy Room, Albany":[-122.299261,37.890476],"Ivy Room, S.F.":[-122.301455,37.890476],"Jazzschool, 2087 Addison Street, Berkeley":[-122.2709651,37.8712507],"Knockout, S.F.":[-122.4221129,37.7451999],"Legionnaire Saloon, Oakland":[-122.2708187,37.8123826],"Lobot Gallery, 1800 Campbell St., Oakland":[-122.2948787,37.814835],"Longboard Margarita Bar, Pacifica":[-122.4903071,37.6332222],"Lost Church, 65 Capp, S.F.":[-122.418409,37.765783],"Maltese, 1600 Park Avenue, Chico":[-121.8271249,39.7212474],"Masonic, S.F":[-122.4153748,37.7912915],"Masonic, S.F.":[-122.4153747,37.791287],"Memorial Auditorium, 1515 J Street, Sacramento":[-121.4879175,38.5788426],"Merchants Saloon, 401 2nd Street, Oakland":[-122.2775095,37.7954984],"Metro, Oakland":[-122.2777909,37.797058],"Mezzanine, S.F.":[-122.4102674,37.7825541],"Milk Bar, 1840 Haight St., S.F.":[-122.4548054,37.7695363],"Monarch, 101 6th Street, S.F.":[-122.410645,37.7810082],"Montbleu Resort, 55 Highway 50, Stateline NV":[-119.9412362,38.9612432],"Music City, 1353 Bush Street, S.F.":[-122.4195814,37.7885446],"Neck of the Woods, S.F.":[-122.4657314,37.784179],"New Parish, Oakland":[-122.2747969,37.8076511],"Night Light, Oakland":[-122.2781325,37.7971539],"Nor Cal Open Jam, R Place Music Hall, Livermore":[-121.7661488,37.6845132],"Octopus Literary Salon, Oakland":[-122.2676085,37.8104379],"Phoenix Theater, Petaluma":[-122.6430667,38.2348794],"Planet Gemini, 2110 Fremont Street, Monterey":[-121.861826,36.595963],"Plough and Stars, 116 Clement St., S.F.":[-122.4627223,37.7832646],"Plough and Stars, S.F.":[-122.4605347,37.7832657],"Public Works, 161 Erie Street at Mission, S.F.":[-122.4194268,37.7688759],"Regency Ballroom, S.F.":[-122.421573,37.787836],"Reno Events Center, 400 N Center St., Reno, NV":[-119.8124811,39.53085],"Rickshaw Stop, S.F.":[-122.422641,37.7760029],"Rite Spot, S.F.":[-122.4149695,37.7638409],"Robert Mondavi Winery, Oakville":[-122.4096888,38.4414921],"Second Act, 1727 Haight Street, S.F.":[-122.4534067,37.769298],"Senator Theater, Chico":[-121.8397472,39.728102],"Sharon Meadow, Golden Gate Park, S.F.":[-122.4576422,37.7680894],"Shoreline Amphitheater, Mountain View":[-122.080765,37.4268879],"Slim's, S.F.":[-122.4154437,37.7714655],"Social Hall, S.F.":[-122.4234378,37.7877708],"Starline Social Club, 2232 MLK, Oakland":[-122.27253,37.8122828],"Starline Social Club, Oakland":[-122.272508,37.812282],"Stork Club, Oakland":[-122.2706259,37.8131318],"Streetlight Records, Santa Cruz":[-122.0253594,36.9707881],"Sweetwater Music Hall, Mill Valley":[-122.550201,37.9069745],"Terrapin Crossroads, San Rafael":[-122.5187867,37.9682163],"Thee Parkside, S.F.":[-122.3999114,37.765222],"Thunder Valley Casino, 1200 Athens Avenue, Lincoln":[-121.3146373,38.8407112],"UC Theater, Berkeley":[-122.2719536,37.8718207],"Warfield, S.F.":[-122.4123447,37.782739]}
 
 /***/ }),
 /* 37 */
@@ -47241,6 +47302,7 @@ var Dates = function (_Component) {
         var selector = _react2.default.createElement(_DateSelector2.default, {
           date: dates[d].date,
           key: dates[d].id,
+          isChecked: dates[d].checked,
           handleCheckboxChange: this.props.handleCheckboxChange
         });
         selectors.push(selector);
@@ -47919,13 +47981,20 @@ var DateSelector = function (_Component) {
     var _this = _possibleConstructorReturn(this, (DateSelector.__proto__ || Object.getPrototypeOf(DateSelector)).call(this, props));
 
     _this.state = {
-      isChecked: true
+      isChecked: _this.props.isChecked
     };
     _this.handleChange = _this.handleChange.bind(_this);
     return _this;
   }
 
   _createClass(DateSelector, [{
+    key: 'componentWillReceiveProps',
+    value: function componentWillReceiveProps(nextProps) {
+      var isChecked = nextProps.isChecked;
+
+      this.setState({ isChecked: isChecked });
+    }
+  }, {
     key: 'handleChange',
     value: function handleChange(e) {
       // Update dates in application for map to use
@@ -47967,6 +48036,7 @@ exports.default = DateSelector;
 
 DateSelector.propTypes = {
   date: _propTypes2.default.string.isRequired,
+  isChecked: _propTypes2.default.bool.isRequired,
   handleCheckboxChange: _propTypes2.default.func.isRequired
 };
 
