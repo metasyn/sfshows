@@ -26,7 +26,7 @@ class Application extends Component {
       dates: [],
       filteredByDate: [],
       filteredByMap: [],
-      filteredByQuery: [],
+      // filteredByQuery: [],
     };
 
     this.allShows = [];
@@ -170,10 +170,12 @@ class Application extends Component {
         return _.map(checkedDates, 'date');
       };
 
+      /*
       const showAllShows = (data) => {
         map.getSource('shows').setData(data);
         map.setFilter('shows', ['has', 'sid']);
       };
+      */
 
       const loadOnscreenShows = () => {
         const bounds = map.getBounds();
@@ -290,7 +292,7 @@ class Application extends Component {
     const filteredShows = filtered.map(feature => feature.properties.sid);
     this.map.setFilter('shows', ['in', 'sid'].concat(filteredShows));
 
-    this.setState({ filteredByQuery: filtered });
+    // this.setState({ filteredByQuery: filtered });
   }
 
   toggleCheckbox(date) {
@@ -311,7 +313,11 @@ class Application extends Component {
       this.popup.remove();
     }
 
+    // This is potentially a bug - since we don't know if the bounding box
+    // around the venue happened to return values from a different venue.
+    // Not really sure how to fix it right now though...
     const point = e.features[0].geometry.coordinates;
+    const singleVenue = e.features[0].properties.venue;
 
     map.easeTo({
       center: point,
@@ -321,7 +327,8 @@ class Application extends Component {
 
     // Populate the popup and set its coordinates based on the feature.
     if (!e.features[0].properties.cluster) {
-      Util.addPopup(map, e.features, this.popup);
+      const singleVenueShows = e.features.filter(f => f.properties.venue === singleVenue);
+      Util.addPopup(map, singleVenue, singleVenueShows, this.popup);
     }
   }
 
@@ -388,6 +395,7 @@ class Application extends Component {
     const listings = [];
     const { filteredByDate, filteredByMap } = this.state;
     const intersection = _.intersection(filteredByDate, filteredByMap);
+
     if (intersection.length) {
       intersection.forEach((feature) => {
         const prop = feature.properties;

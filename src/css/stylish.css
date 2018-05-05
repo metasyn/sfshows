@@ -130,10 +130,18 @@ body {
   display: none
 }
 
+#open-list {
+  display: none;
+}
+
 
 /* Media */
 
 @media only screen and (max-device-width: 580px) {
+
+  #open-list {
+    display: block;
+  }
 
   .mapboxgl-control-container {
     display: none;

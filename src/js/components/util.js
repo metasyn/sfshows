@@ -47,15 +47,6 @@ export function normalize(x) {
   return x.trim().toLowerCase();
 }
 
-export function addPopup(map, features, popup) {
-  const venue = `<h1>${features[0].properties.venue}</h1><br/>`;
-  const html = _.map(features, 'properties.showHTML').reverse().join('<hr><br/>');
-  const point = features[0].geometry.coordinates;
-  popup.setLngLat(point)
-    .setHTML(venue + html)
-    .addTo(map);
-}
-
 export function getUniqueFeatures(array, comparatorProperty) {
   const existingFeatureKeys = {};
   // Because features come from tiled vector data, feature geometries may be split
@@ -72,6 +63,19 @@ export function getUniqueFeatures(array, comparatorProperty) {
   return uniqueFeatures;
 }
 
+export function addPopup(map, venue, features, popup) {
+  const venueHtml = `<h1>${venue}</h1><br/>`;
+  const sortedFeatures = getUniqueFeatures(features, 'sid').sort((a, b) => {
+    const key = a.properties.sid > b.properties.sid;
+    return key ? -1 : 1;
+  });
+
+  const html = _.map(sortedFeatures, 'properties.showHTML').reverse().join('<hr><br/>');
+  const point = features[0].geometry.coordinates;
+  popup.setLngLat(point)
+    .setHTML(venueHtml + html)
+    .addTo(map);
+}
 
 export function getMinMaxDates(dates) {
   const minDate = dates[0];
