@@ -20,7 +20,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.join(paths.SRC, 'index.html'),
     }),
-    new ExtractTextPlugin('style.bunlde.css'),
+    new ExtractTextPlugin('style.bundle.css'),
   ],
   module: {
     rules: [
