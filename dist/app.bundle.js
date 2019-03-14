@@ -29001,16 +29001,17 @@ var Application = function (_Component) {
       var dates = this.state.dates;
 
       // Seriously, fuck javascript so much
+      // what the serious fuck is wrong with this language
+      // this is the most garbage language JFC
 
       function pad(n) {
         return n < 10 ? '0' + n : n;
       }
-
       var dateString = newDate.getFullYear() + '-' + pad(newDate.getMonth() + 1) + '-' + pad(newDate.getDate());
+
       // Loop over all the dates and compare them to a specifc date we've been given
       // this is highly dependent on the way we've chosen to format the date
       var newDates = _lodash2.default.map(dates, function (dateObj) {
-        debugger;
         dateObj.checked = dateObj.date === dateString;
         return dateObj;
       });
