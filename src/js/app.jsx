@@ -58,7 +58,6 @@ class Application extends Component {
       this.setState({ dates: data.dates });
       this.allShows = data.geojson.features;
 
-
       this.setupMap(data.geojson, this.state.dates);
 
       // Modals
@@ -184,7 +183,7 @@ class Application extends Component {
           _.includes(getCheckedDatesList(), x.properties.date));
 
         if (features) {
-          const uniqueFeatures = Util.getUniqueFeatures(features, 'bands');
+          const uniqueFeatures = Util.getUniqueFeatures(features, 'artists');
           // Populate features for the listing overlay.
           this.setState({ filteredByMap: uniqueFeatures });
         }

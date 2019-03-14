@@ -16,7 +16,7 @@ function plotShows(geojson) {
       // with the current map bounds.
       if (bounds.contains(marker.getLatLng()) && selectedDatesList.indexOf(marker.feature.properties.date) !== -1) {
         const feature = marker.feature;
-        const coordsTemplate = L.mapbox.template('{{properties.date}} - {{properties.venue}} |{{#properties.bands}} {{.}} |{{/properties.bands}}{{properties.details}}', feature);
+        const coordsTemplate = L.mapbox.template('{{properties.date}} - {{properties.venue}} |{{#properties.artists}} {{.}} |{{/properties.artists}}{{properties.details}}', feature);
         inBounds.push(coordsTemplate);
       }
     });
@@ -44,7 +44,7 @@ function plotShows(geojson) {
     const feature = e.feature;
 
     // Create custom popup content
-    const popupContent = L.mapbox.template('<h1> {{properties.venue}} </h1><br><h3> {{properties.date}} </h3><br><h2> {{#properties.bands}} - {{.}} <br> {{/properties.bands}} </h2><br><h2> {{properties.details}} </h2><br>', feature);
+    const popupContent = L.mapbox.template('<h1> {{properties.venue}} </h1><br><h3> {{properties.date}} </h3><br><h2> {{#properties.artists}} - {{.}} <br> {{/properties.artists}} </h2><br><h2> {{properties.details}} </h2><br>', feature);
 
     marker.bindPopup(popupContent, {
       closeButton: true,
