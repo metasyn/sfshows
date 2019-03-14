@@ -970,7 +970,7 @@ module.exports = focusNode;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.17.5';
+  var VERSION = '4.17.11';
 
   /** Used as the size to enable large array optimizations. */
   var LARGE_ARRAY_SIZE = 200;
@@ -1234,7 +1234,7 @@ module.exports = focusNode;
   var reHasUnicode = RegExp('[' + rsZWJ + rsAstralRange  + rsComboRange + rsVarRange + ']');
 
   /** Used to detect strings that need a more robust regexp to match words. */
-  var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2,}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
+  var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
 
   /** Used to assign default `context` object properties. */
   var contextProps = [
@@ -1394,6 +1394,14 @@ module.exports = focusNode;
   /** Used to access faster Node.js helpers. */
   var nodeUtil = (function() {
     try {
+      // Use `util.types` for Node.js 10+.
+      var types = freeModule && freeModule.require && freeModule.require('util').types;
+
+      if (types) {
+        return types;
+      }
+
+      // Legacy `process.binding('util')` for Node.js < 10.
       return freeProcess && freeProcess.binding && freeProcess.binding('util');
     } catch (e) {}
   }());
@@ -2172,20 +2180,6 @@ module.exports = focusNode;
       }
     }
     return result;
-  }
-
-  /**
-   * Gets the value at `key`, unless `key` is "__proto__".
-   *
-   * @private
-   * @param {Object} object The object to query.
-   * @param {string} key The key of the property to get.
-   * @returns {*} Returns the property value.
-   */
-  function safeGet(object, key) {
-    return key == '__proto__'
-      ? undefined
-      : object[key];
   }
 
   /**
@@ -4645,7 +4639,7 @@ module.exports = focusNode;
           if (isArguments(objValue)) {
             newValue = toPlainObject(objValue);
           }
-          else if (!isObject(objValue) || (srcIndex && isFunction(objValue))) {
+          else if (!isObject(objValue) || isFunction(objValue)) {
             newValue = initCloneObject(srcValue);
           }
         }
@@ -7566,6 +7560,22 @@ module.exports = focusNode;
         array[length] = isIndex(index, arrLength) ? oldArray[index] : undefined;
       }
       return array;
+    }
+
+    /**
+     * Gets the value at `key`, unless `key` is "__proto__".
+     *
+     * @private
+     * @param {Object} object The object to query.
+     * @param {string} key The key of the property to get.
+     * @returns {*} Returns the property value.
+     */
+    function safeGet(object, key) {
+      if (key == '__proto__') {
+        return;
+      }
+
+      return object[key];
     }
 
     /**
@@ -28816,7 +28826,7 @@ var Application = function (_Component) {
           });
 
           if (features) {
-            var uniqueFeatures = Util.getUniqueFeatures(features, 'bands');
+            var uniqueFeatures = Util.getUniqueFeatures(features, 'artists');
             // Populate features for the listing overlay.
             _this3.setState({ filteredByMap: uniqueFeatures });
           }
@@ -47107,48 +47117,44 @@ var Parser = function () {
   function Parser() {
     _classCallCheck(this, Parser);
 
-    this.yql = Parser.makeYQL();
+    this.list = "https://metasyn.pw/s/shows.json";
   }
 
   _createClass(Parser, [{
     key: 'parseData',
     value: function parseData() {
-      return fetch(this.yql).then(function (r) {
+      return fetch(this.list).then(function (r) {
         return r.json();
-      }).then(function (success) {
-        var results = Parser.parseHTMLtoDOM(success);
-        var dates = Parser.getDates(results);
-        var organized = Parser.sortByDate(results, dates);
+      }).then(function (data) {
+        var organized = Parser.sortByDateForReal(data);
+        var dates = Parser.getDates(organized);
         var geojson = Parser.geojsonify(organized);
+        console.log(geojson);
         return { organized: organized, geojson: geojson, dates: dates };
       }).catch(function (e) {
         return Error(e);
       });
     }
   }], [{
-    key: 'parseHTMLtoDOM',
-    value: function parseHTMLtoDOM(YQLResponse) {
-      var results = YQLResponse.query.results.result.join('\n');
-      var p = new DOMParser();
-      return (0, _jquery2.default)(p.parseFromString(results, 'text/html'));
-    }
-  }, {
-    key: 'makeYQL',
-    value: function makeYQL() {
-      var urls = "'http://www.foopee.com/punk/the-list/by-date.0.html', 'http://www.foopee.com/punk/the-list/by-date.1.html'";
-      var xpath = '//body/ul/li';
-      var query = 'select * from htmlstring where url in (' + urls + ') and xpath=\'' + xpath + '\'';
-      var YQL = 'https://query.yahooapis.com/v1/public/yql?format=json&q=' + encodeURIComponent(query) + '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
-      return YQL;
-    }
-  }, {
     key: 'getDates',
-    value: function getDates($results) {
+    value: function getDates(organized) {
       var dates = [];
-      $results.find('body > li > a').each(function (i, x) {
-        dates.push({ id: i, date: _jquery2.default.trim(x.text), checked: true });
+      Object.keys(organized).map(function (x, i) {
+        dates.push({ id: i, date: _jquery2.default.trim(x), checked: true });
       });
       return dates;
+    }
+  }, {
+    key: 'sortByDateForReal',
+    value: function sortByDateForReal(data) {
+      var organized = {};
+      for (var i = 0; i < data.length; i++) {
+        if (!organized[data[i].date]) {
+          organized[data[i].date] = [];
+        }
+        organized[data[i].date].push(data[i]);
+      }
+      return organized;
     }
   }, {
     key: 'sortByDate',
@@ -47175,7 +47181,7 @@ var Parser = function () {
             venue: things.shift(),
             date: dates[i].date,
             details: deets,
-            bands: things
+            artists: things
           });
         };
 
@@ -47195,7 +47201,10 @@ var Parser = function () {
       // loop through dates
       for (var i = 0; i < dateKeys.length; i += 1) {
         // loop through shows
+        console.log("i", i);
+        console.log(data[dateKeys[i]]);
         for (var j = 0; j < data[dateKeys[i]].length; j += 1) {
+          console.log("j", j);
           var showData = data[dateKeys[i]][j];
           var venueList = Object.keys(_venues2.default);
 
@@ -47216,11 +47225,11 @@ var Parser = function () {
             }
           }
 
-          var showString = dateKeys[i] + ' - ' + showData.venue + ' | ' + showData.bands.join(' | ') + ' | ' + showData.details;
-          var bandsString = showData.bands.map(function (x) {
+          var showString = dateKeys[i] + ' - ' + showData.venue + ' | ' + showData.artists.join(' | ') + ' | ' + showData.details;
+          var artistsString = showData.artists.map(function (x) {
             return '- ' + x + ' <br/>';
           }).join('');
-          var showHTML = '<h2> ' + dateKeys[i] + ' </h2><br/><h3> ' + bandsString + '<br/> ' + showData.details + '</h3>';
+          var showHTML = '<h2> ' + dateKeys[i] + ' </h2><br/><h3> ' + artistsString + '<br/> ' + showData.details + '</h3>';
 
           var show = {
             type: 'Feature',
@@ -47232,7 +47241,7 @@ var Parser = function () {
               sid: i + '-' + j,
               date: dateKeys[i],
               venue: showData.venue,
-              bands: showData.bands,
+              artists: showData.artists,
               details: showData.details.replace(/ ,/g, ''), // fucking commas
               showString: showString,
               showHTML: showHTML

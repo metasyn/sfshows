@@ -5,41 +5,38 @@ import { getEditDistance } from './Util';
 
 export default class Parser {
   constructor() {
-    this.yql = Parser.makeYQL();
+    this.list = "https://metasyn.pw/s/shows.json"
   }
 
   parseData() {
-    return fetch(this.yql).then(r => r.json())
-      .then((success) => {
-        const results = Parser.parseHTMLtoDOM(success);
-        const dates = Parser.getDates(results);
-        const organized = Parser.sortByDate(results, dates);
+    return fetch(this.list).then(r => r.json())
+      .then((data) => {
+        const organized = Parser.sortByDateForReal(data);
+        const dates = Parser.getDates(organized);
         const geojson = Parser.geojsonify(organized);
+        console.log(geojson)
         return { organized, geojson, dates };
       })
       .catch(e => Error((e)));
   }
 
-  static parseHTMLtoDOM(YQLResponse) {
-    const results = YQLResponse.query.results.result.join('\n');
-    const p = new DOMParser();
-    return $(p.parseFromString(results, 'text/html'));
-  }
-
-  static makeYQL() {
-    const urls = "'http://www.foopee.com/punk/the-list/by-date.0.html', 'http://www.foopee.com/punk/the-list/by-date.1.html'";
-    const xpath = '//body/ul/li';
-    const query = `select * from htmlstring where url in (${urls}) and xpath='${xpath}'`;
-    const YQL = `https://query.yahooapis.com/v1/public/yql?format=json&q=${encodeURIComponent(query)}&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys`;
-    return YQL;
-  }
-
-  static getDates($results) {
+  static getDates(organized) {
     const dates = [];
-    $results.find('body > li > a').each((i, x) => {
-      dates.push({ id: i, date: $.trim(x.text), checked: true });
+    Object.keys(organized).map((x, i) => {
+      dates.push({ id: i, date: $.trim(x), checked: true });
     });
     return dates;
+  }
+
+  static sortByDateForReal(data) {
+    const organized = {}
+    for (let i = 0; i < data.length; i++) {
+      if (!organized[data[i].date]) {
+        organized[data[i].date] = []
+      }
+     organized[data[i].date].push(data[i])
+    }
+    return organized
   }
 
   static sortByDate($results, dates) {
@@ -65,7 +62,7 @@ export default class Parser {
           venue: things.shift(),
           date: dates[i].date,
           details: deets,
-          bands: things,
+          artists: things,
         });
       }
     }
@@ -80,7 +77,10 @@ export default class Parser {
     // loop through dates
     for (let i = 0; i < dateKeys.length; i += 1) {
       // loop through shows
+      console.log("i", i)
+      console.log(data[dateKeys[i]])
       for (let j = 0; j < data[dateKeys[i]].length; j += 1) {
+        console.log("j", j)
         const showData = data[dateKeys[i]][j];
         const venueList = Object.keys(Venues);
 
@@ -101,9 +101,9 @@ export default class Parser {
           }
         }
 
-        const showString = `${dateKeys[i]} - ${showData.venue} | ${showData.bands.join(' | ')} | ${showData.details}`;
-        const bandsString = showData.bands.map(x => (`- ${x} <br/>`)).join('');
-        const showHTML = `<h2> ${dateKeys[i]} </h2><br/><h3> ${bandsString}<br/> ${showData.details}</h3>`;
+        const showString = `${dateKeys[i]} - ${showData.venue} | ${showData.artists.join(' | ')} | ${showData.details}`;
+        const artistsString = showData.artists.map(x => (`- ${x} <br/>`)).join('');
+        const showHTML = `<h2> ${dateKeys[i]} </h2><br/><h3> ${artistsString}<br/> ${showData.details}</h3>`;
 
         const show = {
           type: 'Feature',
@@ -115,7 +115,7 @@ export default class Parser {
             sid: `${i}-${j}`,
             date: dateKeys[i],
             venue: showData.venue,
-            bands: showData.bands,
+            artists: showData.artists,
             details: showData.details.replace(/ ,/g, ''), // fucking commas
             showString,
             showHTML,
