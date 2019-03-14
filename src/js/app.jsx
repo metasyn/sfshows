@@ -361,12 +361,16 @@ class Application extends Component {
   filterDate(newDate) {
     const { dates } = this.state;
 
+    // Seriously, fuck javascript so much
+    // what the serious fuck is wrong with this language
+    // this is the most garbage language JFC
+    function pad(n){return n<10 ? '0'+n : n}
+    const dateString = `${newDate.getFullYear()}-${pad(newDate.getMonth()+1)}-${pad(newDate.getDate())}`
+
+    // Loop over all the dates and compare them to a specifc date we've been given
+    // this is highly dependent on the way we've chosen to format the date
     const newDates = _.map(dates, (dateObj) => {
-      const someday = newDate.toString().slice(0, 10);
-      const somedayList = someday.split(' ');
-      somedayList[2] = String(parseInt(somedayList[2], 10));
-      const date = somedayList.join(' ');
-      dateObj.checked = dateObj.date === date;
+      dateObj.checked = dateObj.date === dateString;
       return dateObj;
     });
 
