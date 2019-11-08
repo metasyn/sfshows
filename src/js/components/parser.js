@@ -1,17 +1,17 @@
-import $ from "jquery";
+import $ from 'jquery';
 
-import Venues from "../../data/venues.json";
-import { getEditDistance } from "./util";
+import Venues from '../../data/venues.json';
+import { getEditDistance, formatDate } from './util';
 
 export default class Parser {
   constructor() {
-    this.list = "https://metasyn.pw/s/shows.json";
+    this.list = 'https://metasyn.pw/s/shows.json';
   }
 
   parseData() {
     return fetch(this.list)
       .then(r => r.json())
-      .then(data => {
+      .then((data) => {
         const organized = Parser.sortByDateForReal(data);
         const dates = Parser.getDates(organized);
         const geojson = Parser.geojsonify(organized);
@@ -23,6 +23,7 @@ export default class Parser {
 
   static getDates(organized) {
     const dates = [];
+    // eslint-disable-next-line array-callback-return
     Object.keys(organized).map((x, i) => {
       dates.push({ id: i, date: $.trim(x), checked: true });
     });
@@ -31,7 +32,7 @@ export default class Parser {
 
   static sortByDateForReal(data) {
     const organized = {};
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < data.length; i += 1) {
       if (!organized[data[i].date]) {
         organized[data[i].date] = [];
       }
@@ -49,23 +50,23 @@ export default class Parser {
 
       // Array is zero indexed but nth-child starts at 1
       const index = i + 1;
-      const $shows = $results.find(`body > li:nth-child(${index})`).find("li");
+      const $shows = $results.find(`body > li:nth-child(${index})`).find('li');
 
       for (let si = 0; si < $shows.length; si += 1) {
         const things = [];
         $($shows[si])
-          .find("a")
+          .find('a')
           .each((_, x) => {
             things.push($.trim(x.text));
           });
 
-        const deets = $.trim($shows[si].innerText.split("\n").slice(-3, -2));
+        const deets = $.trim($shows[si].innerText.split('\n').slice(-3, -2));
 
         organized[dates[i].date].push({
           venue: things.shift(),
           date: dates[i].date,
           details: deets,
-          artists: things
+          artists: things,
         });
       }
     }
@@ -89,44 +90,43 @@ export default class Parser {
         if (!Venues[showData.venue]) {
           try {
             for (let v = 0; v < venueList.length; v += 1) {
-              const misspelled = showData.venue.replace(/\W/g, "");
-              const spelledCorrect = venueList[v].replace(/\W/g, "");
+              const misspelled = showData.venue.replace(/\W/g, '');
+              const spelledCorrect = venueList[v].replace(/\W/g, '');
               const editDistance = getEditDistance(misspelled, spelledCorrect);
               if (editDistance <= 3) {
-                console.log(
-                  `"${showData.venue}" has been replaced with "${venueList[v]}"`
-                );
+                console.log(`'${showData.venue}' has been replaced with '${venueList[v]}'`);
                 showData.venue = venueList[v];
               }
             }
           } catch (e) {
-            console.log("Missing Venue?", e);
+            console.log('Missing Venue?', e);
           }
         }
 
-        const showString = `${dateKeys[i]} - ${
+        const formattedDate = formatDate(dateKeys[i]);
+        const showString = `${formattedDate} - ${
           showData.venue
-        } | ${showData.artists.join(" | ")} | ${showData.details}`;
+        } | ${showData.artists.join(' | ')} | ${showData.details}`;
         const artistsString = showData.artists
           .map(x => `- ${x} <br/>`)
-          .join("");
-        const showHTML = `<h2> ${dateKeys[i]} </h2><br/><h3> ${artistsString}<br/> ${showData.details}</h3>`;
+          .join('');
+        const showHTML = `<h2> ${formattedDate} </h2><br/><h3> ${artistsString}<br/> ${showData.details}</h3>`;
 
         const show = {
-          type: "Feature",
+          type: 'Feature',
           geometry: {
-            type: "Point",
-            coordinates: Venues[showData.venue] || [-122.42296, 37.826524]
+            type: 'Point',
+            coordinates: Venues[showData.venue] || [-122.42296, 37.826524], // alcatraz
           },
           properties: {
             sid: `${i}-${j}`,
             date: dateKeys[i],
             venue: showData.venue,
             artists: showData.artists,
-            details: showData.details.replace(/ ,/g, ""), // fucking commas
+            details: showData.details.replace(/ ,/g, ''), // fucking commas
             showString,
-            showHTML
-          }
+            showHTML,
+          },
         };
 
         // add show to features array
@@ -136,8 +136,8 @@ export default class Parser {
 
     // format for valid geojson
     const geojson = {
-      type: "FeatureCollection",
-      features
+      type: 'FeatureCollection',
+      features,
     };
     return geojson;
   }

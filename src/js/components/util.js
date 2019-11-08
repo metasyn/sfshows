@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import {DateTime} from 'luxon';
 
 // Compute the edit distance between the two given strings
 export function getEditDistance(a, b) {
@@ -95,3 +96,21 @@ export function getMinMaxDates(dates) {
     maxTime,
   };
 }
+
+export function getWeekDay(date) {
+  // Create an array containing each day, starting with Sunday.
+  const weekdays = [
+    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+  ];
+  // Use the getDay() method to get the day.
+  const day = date.getDay();
+  // Return the element that corresponds to that index.
+  return weekdays[day];
+}
+
+export function formatDate(dateString) {
+  const date = DateTime.fromISO(dateString); // force pacific timezone
+  date.setZone('America/Los_Angeles');
+  return `${date.weekdayShort}, ${date.month}-${date.day}`;
+}
+
