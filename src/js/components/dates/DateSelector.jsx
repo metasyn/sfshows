@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { formatDate } from '../util';
 
 export default class DateSelector extends Component {
   constructor(props) {
@@ -36,7 +37,7 @@ export default class DateSelector extends Component {
           value={date}
           checked={this.state.isChecked}
           onChange={this.handleChange}
-        /> {date}
+        /> {formatDate(date)}
       </div>
     );
   }
