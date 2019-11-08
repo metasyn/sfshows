@@ -6,10 +6,10 @@ import $ from 'jquery';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-import Parser from './components/Parser';
+import Parser from './components/parser';
 import Dates from './components/dates/Dates';
 
-import * as Util from './components/Util';
+import * as Util from './components/util';
 
 import '../css/stylish.css';
 
@@ -364,8 +364,8 @@ class Application extends Component {
     // Seriously, fuck javascript so much
     // what the serious fuck is wrong with this language
     // this is the most garbage language JFC
-    function pad(n){return n<10 ? '0'+n : n}
-    const dateString = `${newDate.getFullYear()}-${pad(newDate.getMonth()+1)}-${pad(newDate.getDate())}`
+    function pad(n) { return n < 10 ? `0${n}` : n; }
+    const dateString = `${newDate.getFullYear()}-${pad(newDate.getMonth() + 1)}-${pad(newDate.getDate())}`;
 
     // Loop over all the dates and compare them to a specifc date we've been given
     // this is highly dependent on the way we've chosen to format the date
