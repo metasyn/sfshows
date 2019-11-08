@@ -1,23 +1,24 @@
-import $ from 'jquery';
+import $ from "jquery";
 
-import Venues from '../../data/venues.json';
-import { getEditDistance } from './Util';
+import Venues from "../../data/venues.json";
+import { getEditDistance } from "./util";
 
 export default class Parser {
   constructor() {
-    this.list = "https://metasyn.pw/s/shows.json"
+    this.list = "https://metasyn.pw/s/shows.json";
   }
 
   parseData() {
-    return fetch(this.list).then(r => r.json())
-      .then((data) => {
+    return fetch(this.list)
+      .then(r => r.json())
+      .then(data => {
         const organized = Parser.sortByDateForReal(data);
         const dates = Parser.getDates(organized);
         const geojson = Parser.geojsonify(organized);
-        console.log(geojson)
+        console.log(geojson);
         return { organized, geojson, dates };
       })
-      .catch(e => Error((e)));
+      .catch(e => Error(e));
   }
 
   static getDates(organized) {
@@ -29,14 +30,14 @@ export default class Parser {
   }
 
   static sortByDateForReal(data) {
-    const organized = {}
+    const organized = {};
     for (let i = 0; i < data.length; i++) {
       if (!organized[data[i].date]) {
-        organized[data[i].date] = []
+        organized[data[i].date] = [];
       }
-     organized[data[i].date].push(data[i])
+      organized[data[i].date].push(data[i]);
     }
-    return organized
+    return organized;
   }
 
   static sortByDate($results, dates) {
@@ -48,21 +49,23 @@ export default class Parser {
 
       // Array is zero indexed but nth-child starts at 1
       const index = i + 1;
-      const $shows = $results.find(`body > li:nth-child(${index})`).find('li');
+      const $shows = $results.find(`body > li:nth-child(${index})`).find("li");
 
       for (let si = 0; si < $shows.length; si += 1) {
         const things = [];
-        $($shows[si]).find('a').each((_, x) => {
-          things.push($.trim(x.text));
-        });
+        $($shows[si])
+          .find("a")
+          .each((_, x) => {
+            things.push($.trim(x.text));
+          });
 
-        const deets = $.trim($shows[si].innerText.split('\n').slice(-3, -2));
+        const deets = $.trim($shows[si].innerText.split("\n").slice(-3, -2));
 
         organized[dates[i].date].push({
           venue: things.shift(),
           date: dates[i].date,
           details: deets,
-          artists: things,
+          artists: things
         });
       }
     }
@@ -77,10 +80,8 @@ export default class Parser {
     // loop through dates
     for (let i = 0; i < dateKeys.length; i += 1) {
       // loop through shows
-      console.log("i", i)
-      console.log(data[dateKeys[i]])
+      console.log(data[dateKeys[i]]);
       for (let j = 0; j < data[dateKeys[i]].length; j += 1) {
-        console.log("j", j)
         const showData = data[dateKeys[i]][j];
         const venueList = Object.keys(Venues);
 
@@ -88,38 +89,44 @@ export default class Parser {
         if (!Venues[showData.venue]) {
           try {
             for (let v = 0; v < venueList.length; v += 1) {
-              const misspelled = showData.venue.replace(/\W/g, '');
-              const spelledCorrect = venueList[v].replace(/\W/g, '');
+              const misspelled = showData.venue.replace(/\W/g, "");
+              const spelledCorrect = venueList[v].replace(/\W/g, "");
               const editDistance = getEditDistance(misspelled, spelledCorrect);
               if (editDistance <= 3) {
-                console.log(`"${showData.venue}" has been replaced with "${venueList[v]}"`);
+                console.log(
+                  `"${showData.venue}" has been replaced with "${venueList[v]}"`
+                );
                 showData.venue = venueList[v];
               }
             }
           } catch (e) {
-            console.log('Missing Venue?', e);
+            console.log("Missing Venue?", e);
           }
         }
 
-        const showString = `${dateKeys[i]} - ${showData.venue} | ${showData.artists.join(' | ')} | ${showData.details}`;
-        const artistsString = showData.artists.map(x => (`- ${x} <br/>`)).join('');
+        const showString = `${dateKeys[i]} - ${
+          showData.venue
+        } | ${showData.artists.join(" | ")} | ${showData.details}`;
+        const artistsString = showData.artists
+          .map(x => `- ${x} <br/>`)
+          .join("");
         const showHTML = `<h2> ${dateKeys[i]} </h2><br/><h3> ${artistsString}<br/> ${showData.details}</h3>`;
 
         const show = {
-          type: 'Feature',
+          type: "Feature",
           geometry: {
-            type: 'Point',
-            coordinates: Venues[showData.venue] || [-122.422960, 37.826524],
+            type: "Point",
+            coordinates: Venues[showData.venue] || [-122.42296, 37.826524]
           },
           properties: {
             sid: `${i}-${j}`,
             date: dateKeys[i],
             venue: showData.venue,
             artists: showData.artists,
-            details: showData.details.replace(/ ,/g, ''), // fucking commas
+            details: showData.details.replace(/ ,/g, ""), // fucking commas
             showString,
-            showHTML,
-          },
+            showHTML
+          }
         };
 
         // add show to features array
@@ -129,8 +136,8 @@ export default class Parser {
 
     // format for valid geojson
     const geojson = {
-      type: 'FeatureCollection',
-      features,
+      type: "FeatureCollection",
+      features
     };
     return geojson;
   }
