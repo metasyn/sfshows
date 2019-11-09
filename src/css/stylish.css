@@ -46,6 +46,12 @@ body {
   grid-auto-columns: 50% 50%;
 }
 
+#date-selector-container button {
+  margin-top: 0px;
+  float: right;
+  color: #888;
+}
+
 /* Mapbox GL Stuff */
 
 .mapboxgl-popup {
@@ -169,6 +175,9 @@ body {
   #date-selector-container {
     grid-template-columns: unset;  
   }
+
+
+
 
   .map-overlay .closebtn {
     position: absolute;

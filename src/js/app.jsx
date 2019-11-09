@@ -37,6 +37,7 @@ class Application extends Component {
 
     this.bindMap = this.bindMap.bind(this);
     this.filterAll = this.filterAll.bind(this);
+    this.filterDate = this.filterDate.bind(this);
     this.filterToday = this.filterToday.bind(this);
     this.filterTomorrow = this.filterTomorrow.bind(this);
     this.toggleCheckbox = this.toggleCheckbox.bind(this);
@@ -98,6 +99,7 @@ class Application extends Component {
       render(<Dates
         dates={this.state.dates}
         handleCheckboxChange={this.toggleCheckbox}
+        handleOnlyIsolation={this.filterDate}
       />, dateEl);
 
       // Set filter for points
@@ -361,6 +363,13 @@ class Application extends Component {
   filterDate(newDate) {
     const { dates } = this.state;
 
+    if (typeof newDate === 'string') {
+      // this is such garbage
+      // because we're in PST, this will be one day behind
+      newDate = new Date(newDate);
+      newDate.setDate(newDate.getDate() + 1);
+    }
+
     // Seriously, fuck javascript so much
     // what the serious fuck is wrong with this language
     // this is the most garbage language JFC
@@ -408,13 +417,16 @@ class Application extends Component {
         const popupMouseOver = () => {
           // Highlight corresponding feature on the map
           this.popup.setLngLat(feature.geometry.coordinates)
-            .setHTML(venue + prop.showHTML)
+            .setHTML(venue + prop.showModalHTML)
             .addTo(this.map);
         };
 
         const item = (
           <p key={prop.sid} onMouseOver={popupMouseOver} onFocus={popupMouseOver} >
-            {prop.showString}
+            <div style={{ float: 'right' }}>{Util.formatDate(prop.date)}</div>
+            {prop.venue} <br />
+            {prop.artists.join(' | ')} <br />
+            {prop.details}
           </p>
         );
         listings.push(item);
