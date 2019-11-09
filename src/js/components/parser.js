@@ -104,13 +104,10 @@ export default class Parser {
         }
 
         const formattedDate = formatDate(dateKeys[i]);
-        const showString = `${formattedDate} - ${
-          showData.venue
-        } | ${showData.artists.join(' | ')} | ${showData.details}`;
         const artistsString = showData.artists
           .map(x => `- ${x} <br/>`)
           .join('');
-        const showHTML = `<h2> ${formattedDate} </h2><br/><h3> ${artistsString}<br/> ${showData.details}</h3>`;
+        const showModalHTML = `<h2> ${formattedDate} </h2><br/><h3> ${artistsString}<br/> ${showData.details}</h3>`;
 
         const show = {
           type: 'Feature',
@@ -124,8 +121,7 @@ export default class Parser {
             venue: showData.venue,
             artists: showData.artists,
             details: showData.details.replace(/ ,/g, ''), // fucking commas
-            showString,
-            showHTML,
+            showModalHTML,
           },
         };
 

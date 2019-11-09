@@ -71,7 +71,7 @@ export function addPopup(map, venue, features, popup) {
     return key ? -1 : 1;
   });
 
-  const html = _.map(sortedFeatures, 'properties.showHTML').reverse().join('<hr><br/>');
+  const html = _.map(sortedFeatures, 'properties.showModalHTML').reverse().join('<hr><br/>');
   const point = features[0].geometry.coordinates;
   popup.setLngLat(point)
     .setHTML(venueHtml + html)
@@ -111,6 +111,5 @@ export function getWeekDay(date) {
 export function formatDate(dateString) {
   const date = DateTime.fromISO(dateString); // force pacific timezone
   date.setZone('America/Los_Angeles');
-  return `${date.weekdayShort}, ${date.month}-${date.day}`;
+  return `${date.month}-${date.day} ${date.weekdayShort} `;
 }
-

@@ -17,6 +17,7 @@ export default class Dates extends Component {
         key={dates[d].id}
         isChecked={dates[d].checked}
         handleCheckboxChange={this.props.handleCheckboxChange}
+        handleOnlyIsolation={this.props.handleOnlyIsolation}
       />);
       selectors.push(selector);
     }
@@ -29,4 +30,5 @@ Dates.propTypes = {
   // eslint-disable-next-line
   dates: PropTypes.array.isRequired,
   handleCheckboxChange: PropTypes.func.isRequired,
+  handleOnlyIsolation: PropTypes.func.isRequired,
 };

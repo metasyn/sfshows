@@ -9,6 +9,7 @@ export default class DateSelector extends Component {
       isChecked: this.props.isChecked,
     };
     this.handleChange = this.handleChange.bind(this);
+    this.handleOnly = this.handleOnly.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -27,6 +28,10 @@ export default class DateSelector extends Component {
     ));
   }
 
+  handleOnly(e) {
+    this.props.handleOnlyIsolation(e.target.value);
+  }
+
   render() {
     const { date } = this.props;
     return (
@@ -37,7 +42,9 @@ export default class DateSelector extends Component {
           value={date}
           checked={this.state.isChecked}
           onChange={this.handleChange}
-        /> {formatDate(date)}
+        />
+        {formatDate(date)}
+        <button onClick={this.handleOnly} value={date}>only</button>
       </div>
     );
   }
@@ -47,5 +54,6 @@ DateSelector.propTypes = {
   date: PropTypes.string.isRequired,
   isChecked: PropTypes.bool.isRequired,
   handleCheckboxChange: PropTypes.func.isRequired,
+  handleOnlyIsolation: PropTypes.func.isRequired,
 };
 
