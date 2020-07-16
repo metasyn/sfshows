@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "jquery": "^3.4.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "luxon": "^1.21.1",
     "mapbox-gl": "^0.44.0",
     "mapboxgl-spiderifier": "^1.0.3",
