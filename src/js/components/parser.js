@@ -5,7 +5,7 @@ import { getEditDistance, formatDate } from './util';
 
 export default class Parser {
   constructor() {
-    this.list = 'https://metasyn.pw/s/shows.json';
+    this.list = 'https://metasyn.pw/show-scraper';
   }
 
   parseData() {
