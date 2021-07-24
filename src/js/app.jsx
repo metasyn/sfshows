@@ -3,8 +3,8 @@ import { render } from 'react-dom';
 
 import _ from 'lodash';
 import $ from 'jquery';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import mapboxgl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 import Parser from './components/parser';
 import Dates from './components/dates/Dates';
