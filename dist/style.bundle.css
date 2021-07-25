@@ -47,10 +47,11 @@
 }
 
 #date-selector-container button {
-  margin-top: 0px;
-  float: right;
   color: #888;
-  margin-right: 5%;
+}
+
+#date-selector-container button:before {
+    content: "     "
 }
 
 /* Mapbox GL Stuff */
@@ -174,7 +175,7 @@
   }
 
   #date-selector-container {
-    grid-template-columns: unset;  
+    grid-template-columns: unset;
   }
 
 

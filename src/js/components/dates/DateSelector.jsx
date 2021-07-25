@@ -44,7 +44,7 @@ export default class DateSelector extends Component {
           onChange={this.handleChange}
         />
         {formatDate(date)}
-        <button onClick={this.handleOnly} value={date}>only</button>
+        <button onClick={this.handleOnly} value={date}>{'     '}(only)</button>
       </div>
     );
   }
@@ -56,4 +56,3 @@ DateSelector.propTypes = {
   handleCheckboxChange: PropTypes.func.isRequired,
   handleOnlyIsolation: PropTypes.func.isRequired,
 };
-

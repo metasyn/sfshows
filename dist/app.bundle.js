@@ -67831,7 +67831,8 @@ var DateSelector = function (_Component) {
         _react2.default.createElement(
           'button',
           { onClick: this.handleOnly, value: date },
-          'only'
+          '     ',
+          '(only)'
         )
       );
     }
