@@ -15,7 +15,6 @@ export default class Parser {
         const organized = Parser.sortByDateForReal(data);
         const dates = Parser.getDates(organized);
         const geojson = Parser.geojsonify(organized);
-        console.log(geojson);
         return { organized, geojson, dates };
       })
       .catch(e => Error(e));
@@ -81,7 +80,6 @@ export default class Parser {
     // loop through dates
     for (let i = 0; i < dateKeys.length; i += 1) {
       // loop through shows
-      console.log(data[dateKeys[i]]);
       for (let j = 0; j < data[dateKeys[i]].length; j += 1) {
         const showData = data[dateKeys[i]][j];
         const venueList = Object.keys(Venues);
