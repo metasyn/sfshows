@@ -31,7 +31,7 @@
   "dependencies": {
     "jquery": "^3.6.0",
     "lodash": "^4.17.21",
-    "luxon": "^1.28.0",
+    "luxon": "^1.28.1",
     "mapboxgl-spiderifier": "^1.0.10",
     "maplibre-gl": ">=1.14.0",
     "prop-types": "^15.7.2",
